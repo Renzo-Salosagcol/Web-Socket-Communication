@@ -37,7 +37,7 @@ socket.on('chat-message', (data) => {
 })
 
 function addMessageToUI(isOwnMessage, data) {
-  clearFeedback()
+  // clearFeedback()
   const element = `
     <li class="${isOwnMessage ? 'message-right' : 'message-left'}">
       <p class="message">
@@ -55,39 +55,39 @@ function scrollToBottom() {
   messageContainer.scrollTo(0, messageContainer.scrollHeight)
 }
 
-messageInput.addEventListener('focus', (e) => {
-  socket.emit('feedback', {
-    feedback: `${nameInput.value} is typing...`
-  })
-})
+// messageInput.addEventListener('focus', (e) => {
+//   socket.emit('feedback', {
+//     feedback: `${nameInput.value} is typing...`
+//   })
+// })
 
-messageInput.addEventListener('keypress', (e) => { 
-  clearFeedback()
-  socket.emit('feedback', {
-    feedback: `${nameInput.value} is typing...`
-  })
-})
+// messageInput.addEventListener('keypress', (e) => { 
+//   clearFeedback()
+//   socket.emit('feedback', {
+//     feedback: `${nameInput.value} is typing...`
+//   })
+// })
 
-messageInput.addEventListener('blur', (e) => { 
-  socket.emit('feedback', {
-    feedback: ``
-  })
-})
+// messageInput.addEventListener('blur', (e) => { 
+//   socket.emit('feedback', {
+//     feedback: ``
+//   })
+// })
 
-socket.on('feedback', (data) => {
-  clearFeedback()
-  const element = `
-    <li class="message-feedback">
-      <p class="feedback" id="feedback">
-        ${data.feedback}
-      </p>
-    </li>`
+// socket.on('feedback', (data) => {
+//   clearFeedback()
+//   const element = `
+//     <li class="message-feedback">
+//       <p class="feedback" id="feedback">
+//         ${data.feedback}
+//       </p>
+//     </li>`
 
-    messageContainer.innerHTML += element
-})
+//     messageContainer.innerHTML += element
+// })
 
-function clearFeedback() {
-  document.querySelectorAll('.message-feedback').forEach(element => {
-    element.remove()
-  })
-}
+// function clearFeedback() {
+//   document.querySelectorAll('message-feedback').forEach(element => {
+//     element.removeChild(element)
+//   })
+// }

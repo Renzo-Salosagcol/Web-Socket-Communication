@@ -87,7 +87,7 @@ socket.on('feedback', (data) => {
 })
 
 function clearFeedback() {
-  document.querySelectorAll('.message-feedback').forEach(element => {
+  document.querySelectorAll('message-feedback').forEach(element => {
     element.remove()
   })
 }

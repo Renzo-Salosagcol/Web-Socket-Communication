@@ -37,7 +37,7 @@ socket.on('chat-message', (data) => {
 })
 
 function addMessageToUI(isOwnMessage, data) {
-  clearFeedback()
+  // clearFeedback()
   const element = `
     <li class="${isOwnMessage ? 'message-right' : 'message-left'}">
       <p class="message">
@@ -87,7 +87,7 @@ socket.on('feedback', (data) => {
 })
 
 function clearFeedback() {
-  document.querySelectorAll('.message-feedback').forEach(element => {
-    element.remove()
+  document.querySelectorAll('message-feedback').forEach(element => {
+    element.removeChild(element)
   })
 }
