@@ -1,0 +1,29 @@
+{
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1",
+    "ws": "^8.18.0"
+  },
+  "name": "web-socket-communication",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Renzo-Salosagcol/Web-Socket-Communication.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Renzo-Salosagcol/Web-Socket-Communication/issues"
+  },
+  "homepage": "https://github.com/Renzo-Salosagcol/Web-Socket-Communication#readme",
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

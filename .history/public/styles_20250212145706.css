@@ -1,0 +1,25 @@
+body {
+  padding: 0;
+  margin: 0;
+  background-color: black;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+.app-title {
+  background: rgb(78, 78, 78);
+  text-decoration: underline;
+  font-size: 3em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: white;
+  text-align: center;
+}
+
+.message-left {
+  color: blue
+}
+
+.message-right {
+  color: red
+} 

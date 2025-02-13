@@ -1,0 +1,22 @@
+body {
+  paadding: 0;
+  margin: 0;
+}
+
+.app-title {
+  text-decoration: underline;
+  font-size: 3em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: green;
+  align-items: center;
+  justify-content: center;
+}
+
+.message-left {
+  color: blue
+}
+
+.message-right {
+  color: red
+} 

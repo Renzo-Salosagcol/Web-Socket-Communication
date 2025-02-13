@@ -1,0 +1,13 @@
+.app-title {
+  margin-left: auto;
+  text-decoration: underline;
+  justify-content: center;
+}
+
+.message-left {
+  color: blue
+}
+
+.message-right {
+  color: red
+} 
