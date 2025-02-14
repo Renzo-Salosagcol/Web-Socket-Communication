@@ -49,14 +49,13 @@ body {
 }
 
 .message-left, .message-right {
-  margin: 10px 1%;
+  margin: 10px 20%;
   padding: 10px;
   border-radius: 10px;
   word-wrap: break-word;
 }
 
 .message-left {
-  margin-right: auto;
   text-align: left;
   background-color: grey;
   align-self: flex-start;

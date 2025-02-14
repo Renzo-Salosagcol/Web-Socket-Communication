@@ -51,6 +51,7 @@ body {
 .message-left, .message-right {
   margin: 10px 1%;
   padding: 10px;
+  width: full;
   border-radius: 10px;
   word-wrap: break-word;
 }

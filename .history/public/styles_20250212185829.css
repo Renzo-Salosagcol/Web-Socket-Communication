@@ -56,7 +56,6 @@ body {
 }
 
 .message-left {
-  margin-right: auto;
   text-align: left;
   background-color: grey;
   align-self: flex-start;

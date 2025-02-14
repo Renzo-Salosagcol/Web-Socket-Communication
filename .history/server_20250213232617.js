@@ -4,7 +4,6 @@ const fs = require('fs')
 const https = require('https')
 const app = express()
 const PORT = process.env.PORT || 4000
-const LOCAL_IP = '192.168.1.23' // Replace with your local IP address
 
 const server = https.createServer({
   key: fs.readFileSync(path.join(__dirname, 'certs/private.key')),
@@ -13,7 +12,7 @@ const server = https.createServer({
 
 const io = require('socket.io')(server)
 
-server.listen(PORT, LOCAL_IP, () => console.log(`Chat server running on https://${LOCAL_IP}:${PORT}`))
+server.listen(PORT, () => console.log(`Chat server running on port ${PORT}`))
 
 app.use(express.static(path.join(__dirname, 'public')))
 

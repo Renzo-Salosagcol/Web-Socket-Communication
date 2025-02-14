@@ -1,4 +1,4 @@
-const socket = io("wss://192.168.1.23:4000") // Replace with your local IP address
+const socket = io("wss://localhost:4000")
 
 const totalClients = document.getElementById('clients-total')
 
@@ -52,7 +52,7 @@ function addMessageToUI(isOwnMessage, data) {
 }
 
 function scrollToBottom() {
-  messageContainer.scrollTo(0, messageContainer.scrollHeight)
+  messageContainer.scrollTo({ top: messageContainer.scrollHeight, behavior: 'smooth' });
 }
 
 messageInput.addEventListener('focus', (e) => {

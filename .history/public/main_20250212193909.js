@@ -1,4 +1,4 @@
-const socket = io("wss://192.168.1.23:4000") // Replace with your local IP address
+const socket = io("http://localhost:4000")
 
 const totalClients = document.getElementById('clients-total')
 
@@ -87,7 +87,7 @@ socket.on('feedback', (data) => {
 })
 
 function clearFeedback() {
-  document.querySelectorAll('.message-feedback').forEach(element => {
+  document.querySelectorAll('message-feedback').forEach(element => {
     element.remove()
   })
 }
