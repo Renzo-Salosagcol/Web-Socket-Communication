@@ -1,3 +1,5 @@
 .env
 certificate.*
 private.key
+
+node_modules
