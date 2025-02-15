@@ -12,12 +12,9 @@ socket.on("total-clients", (data) => {
   totalClients.innerText = `Total Clients Connected: ${data}`
 })
 
-const rateLimitedMessage = rateLimit(sendMessage, 10000, 3)
-let callCount = 0
-
 messageForm.addEventListener('submit', (e) => {
   e.preventDefault()
-  rateLimitedMessage()
+  sendMessage()
 })
 
 function sendMessage() {

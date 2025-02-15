@@ -8,7 +8,7 @@ const fs = require('fs')
 const https = require('https')
 const app = express()
 const PORT = process.env.PORT || 4000
-const LOCAL_IP = '192.168.1.23' // Replace with your local IP address
+const LOCAL_IP = '192.168.12.134' // Replace with your local IP address
 
 // ------------------------------------------------------------------
 

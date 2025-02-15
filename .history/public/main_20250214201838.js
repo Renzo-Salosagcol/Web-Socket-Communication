@@ -1,9 +1,11 @@
-const socket = io("wss://192.168.1.23:4000") // Replace with your local IP address
+const localIP = process.env.localIPV4 || 'localhost'
+const localPort = process.env.localPort || 4000
+
+const socket = io(`wss://${localIP}:${localPort}`) // Replace with your local IP address
 
 const totalClients = document.getElementById('clients-total')
 
 const messageContainer = document.getElementById('message-container')
-//const nameInput = document.getElementById('name-input')
 const username = document.getElementById('name-input').value;
 const messageForm = document.getElementById('message-form')
 const messageInput = document.getElementById('message-input')
@@ -25,7 +27,6 @@ function sendMessage() {
   console.log(messageInput.value)
   
   const data = {
-    //name: nameInput.value,
     name: username,
     message: messageInput.value,
     dateTime: new Date()
@@ -37,7 +38,6 @@ function sendMessage() {
 }
 
 socket.on('chat-message', (data) => {
-  // console.log(data)
   addMessageToUI(false, data)
 })
 
