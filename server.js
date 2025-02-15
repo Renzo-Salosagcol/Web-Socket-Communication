@@ -121,10 +121,16 @@ app.post('/register', checkNotAuthenticated, async (req, res) =>{
   }
 })
 
-app.delete('/logout', (req, res) => {
-  req.logout()
-  req.redirect('/login')
+// Logout
+app.delete('/logout', (req, res, next) => {
+  req.logout((err) => {
+    if (err) {
+      return next(err) // Handle errors properly
+    }
+    res.redirect('/login')
+  })
 })
+
 
 function checkAuthenticated(req, res, next){
   if (req.isAuthenticated()) {
