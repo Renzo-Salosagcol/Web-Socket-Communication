@@ -1,4 +1,4 @@
-const localIP = process.env.localIP || 'localhost'
+const localIP = process.env.localIP
 const localPort = process.env.localPort || 4000
 
 const socket = io(`wss://${ localIP }:${ localPort }`) // Replace with your local IP address

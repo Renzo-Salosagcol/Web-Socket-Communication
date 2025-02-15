@@ -1,7 +1,6 @@
-const localIP = process.env.localIP || 'localhost'
-const localPort = process.env.localPort || 4000
+const localIP = process.env.localIP
 
-const socket = io(`wss://${ localIP }:${ localPort }`) // Replace with your local IP address
+const socket = io("wss://192.168.1.23:4000") // Replace with your local IP address
 
 const totalClients = document.getElementById('clients-total')
 

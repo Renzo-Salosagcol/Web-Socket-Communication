@@ -7,8 +7,9 @@ const path = require('path')
 const fs = require('fs')
 const https = require('https')
 const app = express()
+const env = require('dotenv').config()
 const PORT = process.env.PORT || 4000
-const LOCAL_IP = process.env.LOCAL_IP || 'localhost'
+const LOCAL_IP = process.env.LOCAL_IP
 // ------------------------------------------------------------------
 
 const bcrypt = require('bcrypt') // Encryption
