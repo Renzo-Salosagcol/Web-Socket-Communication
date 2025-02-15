@@ -55,7 +55,7 @@ You will recieve an output similar to this:
 > <code>C:/Users/User/Desktop/Web-Socket-Communication$ npm run dev</code>
 >
 > <code>> web-socket-communication@1.0.0 dev</code><br>
-> <code>>nodemon server.js</code>
+> <code>> nodemon server.js</code>
 >
 > <code>[nodemon] 3.1.9
 > [nodemon] to restart at any time, enter `rs`
