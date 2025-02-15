@@ -12,12 +12,9 @@ socket.on("total-clients", (data) => {
   totalClients.innerText = `Total Clients Connected: ${data}`
 })
 
-const rateLimitedMessage = rateLimit(sendMessage, 10000, 3)
-let callCount = 0
-
 messageForm.addEventListener('submit', (e) => {
   e.preventDefault()
-  rateLimitedMessage()
+  sendMessage()
 })
 
 function sendMessage() {
@@ -98,24 +95,25 @@ function clearFeedback() {
 }
 
 // Rate Limiting
-function rateLimit(func, delay, maxCalls) {
+function rateLimit(func, delay) {
   let lastCall = 0;
   return () => {
     const now = new Date().getTime();
-    if (now - lastCall >= delay || callCount < maxCalls) {
-      callCount++;
+    if (now - lastCall >= delay) {
       lastCall = now;
       return func();
     } else {
       // Surpassed Rate Limit
-      callCount = 0;
       document.getElementById('message-form').setAttribute("disabled", "true")
-      alert("Rate Limit Exceeded: Messaging disabled for 5 seconds")
       document.getElementById('message-input').setAttribute("placeholder", "Messaging disabled for 5 seconds")
       setTimeout(() => {
         document.getElementById('message-form').removeAttribute("disabled")
-        document.getElementById('message-input').setAttribute("placeholder", "Type a message...")
       }, 5000)
     }
   };
 }
+
+// Usage
+const limitedFunc = rateLimit(() => console.log('Function called!'), 1000);
+limitedFunc(); // Will execute immediately
+limitedFunc(); // Will be ignored if called within 1 second

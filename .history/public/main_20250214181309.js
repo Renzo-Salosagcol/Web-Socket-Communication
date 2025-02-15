@@ -114,8 +114,8 @@ function rateLimit(func, delay, maxCalls) {
       document.getElementById('message-input').setAttribute("placeholder", "Messaging disabled for 5 seconds")
       setTimeout(() => {
         document.getElementById('message-form').removeAttribute("disabled")
-        document.getElementById('message-input').setAttribute("placeholder", "Type a message...")
       }, 5000)
+      document.getElementById('message-input').setAttribute("placeholder", "Type a message...")
     }
   };
 }
