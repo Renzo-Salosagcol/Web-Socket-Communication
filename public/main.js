@@ -1,4 +1,4 @@
-const socket = io("wss://192.168.1.23:4000") // Replace with your local IP address
+const socket = io("wss://192.168.199.1:4000") // Replace with your local IP address
 
 const totalClients = document.getElementById('clients-total')
 
