@@ -1,0 +1,99 @@
+body {
+  padding: 0;
+  margin: 0;
+  background-color: black;
+  color: white;
+  font-family: Arial, sans-serif;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-title {
+  background: rgb(78, 78, 78);
+  text-decoration: underline;
+  font-size: 3em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  border-radius: 10px;
+  word-wrap: break-word;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.name {
+  color: white;
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.message-container {
+  background-color: rgb(35, 35, 35);
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 60px; /* Space for the message form */
+  list-style-type: none;
+  padding: 0;
+}
+
+.message-left, .message-right {
+  margin: 10px 1%;
+  padding: 10px;
+  border-radius: 10px;
+  word-wrap: break-word;
+}
+
+.message-left {
+  margin-right: auto;
+  text-align: left;
+  background-color: grey;
+  align-self: flex-start;
+}
+
+.message-right {
+  text-align: right;
+  background-color: blue;
+  align-self: flex-end;
+}
+
+.message-form {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background-color: rgb(78, 78, 78);
+  padding: 10px;
+  border-top: 1px solid white;
+  display: flex;
+  align-items: center;
+  max-width: 100%;
+  box-sizing: border-box;
+  left: 0;
+}
+
+.message-form input[type="text"] {
+  flex: 1;
+  margin-right: 10px;
+  max-width: calc(100% - 110px); /* Adjust based on button width */
+}
+
+.message-form button {
+  flex-shrink: 0;
+  max-width: 100px; /* Adjust based on button width */
+}
+
+.clients-total {
+  text-align: center;
+  margin-top: 10px;
+}

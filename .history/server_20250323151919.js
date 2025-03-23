@@ -43,6 +43,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  user: null
 }))
 app.use(passport.initialize())
 app.use(passport.session())

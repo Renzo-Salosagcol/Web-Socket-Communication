@@ -42,7 +42,7 @@ app.use(flash())
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: false
 }))
 app.use(passport.initialize())
 app.use(passport.session())
@@ -64,56 +64,50 @@ const rooms = {
 io.on('connection', onConnected)
 
 function onConnected(socket) {
-  const user = {
-    username: session.user,
-    id: socket.id,
-    rooms: ['general'],
-    currentRoom: 'general'
-  }
+  socket.on('user-connected', (name) => {
+    var user = {
+      username: name,
+      id: socket.id,
+      rooms: ['general']
+    }
     
-  socket.join('general')
-  rooms['general'].users.push(socket.id)
-  console.log(`User: ${name}, Socket ID: ${socket.id}`)
+    socket.join('general')
+    rooms['general'].users.push(socket.id)
+    console.log(`User: ${name}, Socket ID: ${socket.id}`)
+    io.emit("total-clients", usersConnected.size)
 
-  // Check for Previous Rooms with SocketID
-  Object.keys(rooms).forEach(roomName => {
-    const room = rooms[roomName]
-    if (room.users.includes(socket.id)) {
-      room.users = room.users.filter((user) => user !== socket.id)
-    }
+    // Check for Previous Rooms with SocketID
+    Object.keys(rooms).forEach(roomName => {
+      const room = rooms[roomName]
+      if (room.users.includes(socket.id)) {
+        room.users = room.users.filter((user) => user !== socket.id)
+      }
 
-    if (roomName.includes(socket.id)) {
-      user.rooms.push(roomName)
-    }
-  })
-
-  if (usersConnected.size > 1) {
-    usersConnected.forEach((user) => {
-      if (user.id !== socket.id) {
-        const privateRoom = [user.id, socket.id].sort().join('-')
-        rooms[privateRoom] = { users: [user.id, socket.id], messages: [] }
-
-        if (!user.rooms.includes(privateRoom)) {
-          user.rooms.push(privateRoom)
-        }
+      if (roomName.includes(socket.id)) {
+        user.rooms.push(roomName)
       }
     })
-  }
+  
+    if (usersConnected.size > 1) {
+      usersConnected.forEach((user) => {
+        if (user.id !== socket.id) {
+          const privateRoom = [user.id, socket.id].sort().join('-')
+          rooms[privateRoom] = { users: [user.id, socket.id], messages: [] }
 
-  console.log(user)
-  usersConnected.add(user)
+          if (!user.rooms.includes(privateRoom)) {
+            user.rooms.push(privateRoom)
+          }
+        }
+      })
+    }
+
+    usersConnected.add(user)
+  })
 
   socket.on("join-room", (roomName, cb) => {
     socket.join(roomName)
-    user.currentRoom = roomName
-
-    if (!user.rooms.includes(roomName)) {
-      user.rooms.push(roomName)
-    }
-
-    if (!rooms[roomName].users.includes(socket.id)) {
-      rooms[roomName].users.push(socket.id)
-    }
+    rooms[roomName].users.push(socket.id)
+    cb(rooms.roomName.messages)
   })
 
   socket.on('disconnect', () => {
@@ -124,12 +118,11 @@ function onConnected(socket) {
 
   socket.on('message', (data) => {
     console.log(data)
-    rooms[currentRoom].messages.push(data)
-    socket.to(user.currentRoom).broadcast.emit('chat-message', data)
+    socket.broadcast.emit('chat-message', data)
   })
 
   socket.on('feedback', (data) => {
-    socket.broadcast.to(user.currentRoom).emit('feedback', data)
+    socket.broadcast.emit('feedback', data)
   })
 }
 
@@ -138,9 +131,6 @@ function onConnected(socket) {
 app.set('views', path.join(__dirname, 'views'))
 
 app.get('/', checkAuthenticated, (req, res) => {
-  session = {
-    user: req.user.name,
-  }
   let userRooms = []
   usersConnected.forEach((user) => {
     if (user.name === req.user.name) {

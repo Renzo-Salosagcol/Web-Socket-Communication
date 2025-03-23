@@ -42,7 +42,7 @@ app.use(flash())
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: false
 }))
 app.use(passport.initialize())
 app.use(passport.session())
@@ -65,7 +65,7 @@ io.on('connection', onConnected)
 
 function onConnected(socket) {
   const user = {
-    username: session.user,
+    username: req.user.name,
     id: socket.id,
     rooms: ['general'],
     currentRoom: 'general'

@@ -5,25 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/styles.css"> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <script>
-        socket.emit('user-connected', '<%= name %>');
-    </script>
     <title>Yap Sessions</title>
 </head>
 <body>
-    <header>
-        <h2 class="app-title">Yap Sessions</h2>
-        <form action="/logout?_method=DELETE" method="POST">
-            <button type="submit">Log Out</button>
+    <h2 class="app-title">Yap Sessions</h2>
+    <form action="/logout?_method=DELETE" method="POST">
+        <button type="submit">Log Out</button>
         </form>
-        <div id="room-container">
-            <ul id="room-buttons">
-                <% Object.keys(rooms).forEach((room) => { %>
-                    <li><button><%= room %></button></li>
-                <% }) %>
-            </ul>
-        </div>
-    </header>
     <div class="main">
         <div class="name">
             <span></span>
@@ -48,6 +36,8 @@
     <form action="/logout?_method=DELETE" method="POST">
         <button type="submit">Logout</button>
     </form>
-    
+    <script>
+        socket.emit('user-connected', '<%= name %>');
+    </script>
 </body>
 </html>
