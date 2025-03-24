@@ -73,7 +73,7 @@ socket.on('chat-message', (data) => {
 
 function addMessageToUI(isOwnMessage, data, messageHistory) {
   clearFeedback()
-let element = ``
+  let element = ``
   if (!messageHistory) {
     element = `
       <li class="${isOwnMessage ? 'message-right' : 'message-left'}">
@@ -115,7 +115,7 @@ messageInput.addEventListener('keypress', (e) => {
   })
 })
 
-messageInput.addEventListener('blur', (e) => { 
+messageInput.addEventListener('blur', (e) => {
   socket.emit('feedback', currentRoom, {
     feedback: ``
   })
@@ -213,5 +213,5 @@ roomButtons.addEventListener('click', (e) => {
 });
 
 function clearMessages() {
-  messageContainer.innerHTML = ''; 
+  messageContainer.innerHTML = '';
 }
