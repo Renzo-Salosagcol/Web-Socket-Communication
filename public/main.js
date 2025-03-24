@@ -44,15 +44,15 @@ messageForm.addEventListener('submit', (e) => {
 })
 
 function sendMessage() {
-  if (messageInput.value === '') return
-  console.log(messageInput.value)
+  if (messageInput.value === '') return;
+
+  const formattedMessage = formatMessage(messageInput.value); // Format text before sending
 
   const data = {
-    //name: nameInput.value,
     name: username,
-    message: messageInput.value,
+    message: formattedMessage, // Use the formatted text
     dateTime: new Date()
-  }
+  };
 
   socket.emit('message', currentRoom, data)
   addMessageToUI(true, data, false)
@@ -94,8 +94,8 @@ let element = ``
     `
   }
 
-  messageContainer.innerHTML += element
-  scrollToBottom()
+  messageContainer.insertAdjacentHTML('beforeend', element);  // Correctly renders formatted HTML
+  scrollToBottom();
 }
 
 function scrollToBottom() {
@@ -114,7 +114,6 @@ messageInput.addEventListener('keypress', (e) => {
     feedback: `${nameInput.value} is typing...`
   })
 })
-
 
 messageInput.addEventListener('blur', (e) => { 
   socket.emit('feedback', currentRoom, {
@@ -139,6 +138,22 @@ function clearFeedback() {
     element.remove()
   })
 }
+
+// Function to format text with basic Markdown-like syntax
+function formatMessage(text) {
+  // Escape HTML tags before formatting
+  text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  // Format text using Markdown-like syntax
+  text = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');    // **bold**
+  text = text.replace(/\*(.*?)\*/g, '<i>$1</i>');         // *italic*
+  text = text.replace(/__(.*?)__/g, '<u>$1</u>');         // __underline__
+  text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>'); // [text](link)
+
+  return text;
+}
+
+
 
 // Rate Limiting
 function rateLimit(func, delay, maxCalls) {
