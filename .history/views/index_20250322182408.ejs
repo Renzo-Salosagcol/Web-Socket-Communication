@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles.css"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <title>Yap Sessions</title>
+</head>
+<body>
+    <h2 class="app-title">Yap Sessions</h2>
+    
+    <div class="sidebar">
+        <h3>Chat Rooms</h3>
+        <ul class="chat-rooms">
+            <li><button id="allUsersButton">All Users</button></li>
+            <li><a href="/chat/room2">Room 2</a></li>
+            <li><a href="/chat/room3">Room 3</a></li>
+        </ul>
+        <div class="name">
+            <span></span>
+            <input type="text" id="name-input" class="name-input" value="<%= name %>" maxlength="20" readonly>
+        </div>
+        <form action="/logout?_method=DELETE" method="POST">
+            <button type="submit">Log Out</button>
+        </form>
+    </div>
+    <div class="main">
+        <div class="name">
+            <span></span>
+            <input type="text" id="name-input" class="name-input" value="<%= name %>" maxlength="20" readonly>
+        </div>
+        <ul class="message-container" id="message-container">
+            <h3 class="clients-total" id="clients-total">Total Clients: 0</h3>
+        </ul>
+        <form class="message-form" id="message-form">
+            <input type="text" name="message" id="message-input" class="message-input" placeholder="Type a message..." required>
+            <div class="v-divider"></div>
+            <button type="submit" class="send-button">
+                Send <span><i class="fas fa-paper-plane"></i></span>
+            </button>
+        </form>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.28.0/moment.min.js"></script>
+    <script src="/main.js"></script>
+</body>
+</html>
