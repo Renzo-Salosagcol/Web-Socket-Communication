@@ -23,21 +23,30 @@
     </header>
     <div class="main">
         <div class="name">
-            <span></span>
             <input type="text" id="name-input" class="name-input" value="<%= name %>" maxlength="20" readonly>
         </div>
-        <ul class="message-container" id="message-container">
-            <h3 class="clients-total" id="clients-total">Total Clients: 0</h3>
-        </ul>
-        <form class="message-form" id="message-form">
-            <input type="text" name="message" id="message-input" class="message-input" placeholder="Type a message..." required>
-            <div class="v-divider"><s/div>
-            <button type="submit" class="send-button">
-                Send <span><i class="fas fa-paper-plane"></i></span>
-            </button>
-        </form>
+
+        <!-- Fix ul issue -->
+        <h3 class="clients-total" id="clients-total">Total Clients: 0</h3>
+        <ul class="message-container" id="message-container"></ul>
     </div>
 
+    <!-- Form floating separately -->
+    <form class="message-form" id="message-form">
+        <input type="text" name="message" id="message-input" class="message-input" placeholder="Type a message..." required>
+        <button type="button" id="emoji-button" class="emoji-btn">😊</button> 
+        <div class="v-divider"></div>
+        <button type="submit" class="send-button">
+            Send <span><i class="fas fa-paper-plane"></i></span>
+        </button>
+        <div id="emoji-container" style="display: none"></div>
+        
+    </form>
+</body>
+
+    
+
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.6.2/index.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.28.0/moment.min.js"></script>
     <script src="/main.js"></script>

@@ -1,4 +1,4 @@
-const socket = io("wss://192.168.1.23:4000") // Replace with your local IP address
+const socket = io("wss://192.168.12.135:4000") // Replace with your local IP address
 
 const totalClients = document.getElementById('clients-total')
 
@@ -7,10 +7,30 @@ const messageContainer = document.getElementById('message-container')
 const username = document.getElementById('name-input').value;
 const messageForm = document.getElementById('message-form')
 const messageInput = document.getElementById('message-input')
+
 const roomButtons = document.getElementById('room-buttons')
 let rooms = []
 currentRoom = 'general'
+const emojiButton = document.getElementById('emoji-button');
+const emojiContainer = document.getElementById('emoji-container');
+const picker = document.createElement('emoji-picker');
+emojiContainer.appendChild(picker);
 
+
+// Add the click listener ONCE
+picker.addEventListener('emoji-click', (event) => {
+  messageInput.value += event.detail.unicode;
+});
+
+emojiButton.addEventListener('click', () => {
+  emojiContainer.style.display =
+    (emojiContainer.style.display === 'none' || emojiContainer.style.display === '')
+      ? 'block'
+      : 'none';
+});
+
+
+//--------------------------------------
 socket.on("total-clients", (data) => {
   totalClients.innerText = `Total Clients Connected: ${data}`
 })
@@ -26,7 +46,7 @@ messageForm.addEventListener('submit', (e) => {
 function sendMessage() {
   if (messageInput.value === '') return
   console.log(messageInput.value)
-  
+
   const data = {
     //name: nameInput.value,
     name: username,
@@ -88,12 +108,13 @@ messageInput.addEventListener('focus', (e) => {
   })
 })
 
-messageInput.addEventListener('keypress', (e) => { 
+messageInput.addEventListener('keypress', (e) => {
   clearFeedback()
   socket.emit('feedback', currentRoom, {
     feedback: `${nameInput.value} is typing...`
   })
 })
+
 
 messageInput.addEventListener('blur', (e) => { 
   socket.emit('feedback', currentRoom, {
@@ -110,7 +131,7 @@ socket.on('feedback', (data) => {
       </p>
     </li>`
 
-    messageContainer.innerHTML += element
+  messageContainer.innerHTML += element
 })
 
 function clearFeedback() {
