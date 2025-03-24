@@ -107,3 +107,20 @@ body {
   text-align: center;
   margin-top: 10px;
 }
+
+.message a {
+  color: #4DA6FF;  /* Highlight links in blue */
+  text-decoration: underline;
+}
+
+.message b {
+  font-weight: bold;
+}
+
+.message i {
+  font-style: italic;
+}
+
+.message u {
+  text-decoration: underline;
+}
