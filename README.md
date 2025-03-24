@@ -6,6 +6,8 @@
 
 <li>Emmanuel Montoya</li>
 
+<li>Ivan Perez</li>
+
 ## Description
 
 A client-server WebSocket-based chat system that allows team members to communicate in real time.
