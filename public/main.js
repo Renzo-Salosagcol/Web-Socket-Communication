@@ -1,4 +1,4 @@
-const socket = io("wss://192.168.199.1:4000") // Replace with your local IP address
+const socket = io("wss://192.168.12.135:4000") // Replace with your local IP address
 
 const totalClients = document.getElementById('clients-total')
 
@@ -18,9 +18,9 @@ picker.addEventListener('emoji-click', (event) => {
 });
 
 emojiButton.addEventListener('click', () => {
-  emojiContainer.style.display = 
-    (emojiContainer.style.display === 'none' || emojiContainer.style.display === '') 
-      ? 'block' 
+  emojiContainer.style.display =
+    (emojiContainer.style.display === 'none' || emojiContainer.style.display === '')
+      ? 'block'
       : 'none';
 });
 
@@ -41,7 +41,7 @@ messageForm.addEventListener('submit', (e) => {
 function sendMessage() {
   if (messageInput.value === '') return
   console.log(messageInput.value)
-  
+
   const data = {
     //name: nameInput.value,
     name: username,
@@ -84,14 +84,14 @@ messageInput.addEventListener('focus', (e) => {
   })
 })
 
-messageInput.addEventListener('keypress', (e) => { 
+messageInput.addEventListener('keypress', (e) => {
   clearFeedback()
   socket.emit('feedback', {
     feedback: `${nameInput.value} is typing...`
   })
 })
 
-messageInput.addEventListener('blur', (e) => { 
+messageInput.addEventListener('blur', (e) => {
   socket.emit('feedback', {
     feedback: ``
   })
@@ -106,7 +106,7 @@ socket.on('feedback', (data) => {
       </p>
     </li>`
 
-    messageContainer.innerHTML += element
+  messageContainer.innerHTML += element
 })
 
 function clearFeedback() {
