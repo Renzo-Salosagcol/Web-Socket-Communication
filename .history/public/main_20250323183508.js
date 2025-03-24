@@ -1,4 +1,4 @@
-const socket = io("wss://192.168.12.135:4000") // Replace with your local IP address
+const socket = io("wss://192.168.1.23:4000") // Replace with your local IP address
 
 const totalClients = document.getElementById('clients-total')
 
@@ -7,30 +7,10 @@ const messageContainer = document.getElementById('message-container')
 const username = document.getElementById('name-input').value;
 const messageForm = document.getElementById('message-form')
 const messageInput = document.getElementById('message-input')
-
 const roomButtons = document.getElementById('room-buttons')
 let rooms = []
 currentRoom = 'general'
-const emojiButton = document.getElementById('emoji-button');
-const emojiContainer = document.getElementById('emoji-container');
-const picker = document.createElement('emoji-picker');
-emojiContainer.appendChild(picker);
 
-
-// Add the click listener ONCE
-picker.addEventListener('emoji-click', (event) => {
-  messageInput.value += event.detail.unicode;
-});
-
-emojiButton.addEventListener('click', () => {
-  emojiContainer.style.display =
-    (emojiContainer.style.display === 'none' || emojiContainer.style.display === '')
-      ? 'block'
-      : 'none';
-});
-
-
-//--------------------------------------
 socket.on("total-clients", (data) => {
   totalClients.innerText = `Total Clients Connected: ${data}`
 })
@@ -44,31 +24,22 @@ messageForm.addEventListener('submit', (e) => {
 })
 
 function sendMessage() {
-  if (messageInput.value === '') return;
-
-  const formattedMessage = formatMessage(messageInput.value); // Format text before sending
-
+  if (messageInput.value === '') return
+  console.log(messageInput.value)
+  
   const data = {
+    //name: nameInput.value,
     name: username,
-    message: formattedMessage, // Use the formatted text
+    message: messageInput.value,
     dateTime: new Date()
-  };
+  }
 
-  socket.emit('message', currentRoom, data)
-  addMessageToUI(true, data, false)
+  socket.emit('message', name, data)
   messageInput.value = ''
 }
 
-socket.on('self-chat-message', (data) => {
-  if (data.room === currentRoom) {
-    addMessageToUI(true, data, false)
-  }
-})
-
-socket.on('chat-message', (data) => {
-  if (data.room === currentRoom) {
-    addMessageToUI(false, data, false)
-  }
+socket.on('chat-message', (isOwnMessage, data) => {
+  addMessageToUI(isOwnMessage, data, false)
 })
 
 function addMessageToUI(isOwnMessage, data, messageHistory) {
@@ -94,8 +65,8 @@ let element = ``
     `
   }
 
-  messageContainer.insertAdjacentHTML('beforeend', element);  // Correctly renders formatted HTML
-  scrollToBottom();
+  messageContainer.innerHTML += element
+  scrollToBottom()
 }
 
 function scrollToBottom() {
@@ -108,7 +79,7 @@ messageInput.addEventListener('focus', (e) => {
   })
 })
 
-messageInput.addEventListener('keypress', (e) => {
+messageInput.addEventListener('keypress', (e) => { 
   clearFeedback()
   socket.emit('feedback', currentRoom, {
     feedback: `${nameInput.value} is typing...`
@@ -130,7 +101,7 @@ socket.on('feedback', (data) => {
       </p>
     </li>`
 
-  messageContainer.innerHTML += element
+    messageContainer.innerHTML += element
 })
 
 function clearFeedback() {
@@ -138,22 +109,6 @@ function clearFeedback() {
     element.remove()
   })
 }
-
-// Function to format text with basic Markdown-like syntax
-function formatMessage(text) {
-  // Escape HTML tags before formatting
-  text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-  // Format text using Markdown-like syntax
-  text = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');    // **bold**
-  text = text.replace(/\*(.*?)\*/g, '<i>$1</i>');         // *italic*
-  text = text.replace(/__(.*?)__/g, '<u>$1</u>');         // __underline__
-  text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>'); // [text](link)
-
-  return text;
-}
-
-
 
 // Rate Limiting
 function rateLimit(func, delay, maxCalls) {
@@ -190,8 +145,7 @@ socket.on('new-user', user => {
 })
 
 // Joining Rooms
-socket.on('joined-room', (userName, room, messages) => {
-  currentRoom = room
+socket.on('joined-room', (userName, messages) => {
   messages.forEach((message) => {
     if (message.name === userName) {
       addMessageToUI(true, message, true)

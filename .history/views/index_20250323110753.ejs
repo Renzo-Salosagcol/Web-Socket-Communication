@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles.css"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <title>Yap Sessions: </title>
+</head>
+<body>
+    <div class="room-container-index">
+        <h2 class="app-title">Yap Sessions</h2>
+        <h3>Please Select a Room to Join</h3>
+        <ul id="room-buttons">
+            <% Object.keys(rooms).forEach(room => { %>
+            <a href="/<%= room %>"><button><%= room %></button></a>
+        <% }) %>
+        </ul>
+        <form action="/logout?_method=DELETE" method="POST">
+            <button type="submit">Log Out</button>
+        </form>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.28.0/moment.min.js"></script>
+    <script defer src="/socket.io/socket.io.js"></script>
+    <script src="/main.js"></script>
+    <script>
+        const roomName = "<%= roomName %>";
+    </script>
+</html>
