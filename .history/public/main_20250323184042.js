@@ -154,8 +154,7 @@ socket.on('new-user', user => {
 })
 
 // Joining Rooms
-socket.on('joined-room', (userName, room, messages) => {
-  currentRoom = room
+socket.on('joined-room', (userName, messages) => {
   messages.forEach((message) => {
     if (message.name === userName) {
       addMessageToUI(true, message, true)

@@ -61,9 +61,9 @@ app.use(express.static(path.join(__dirname, 'public')))
 let usersConnected = new Set()
 
 const rooms = {
-  general: { users: [], messages: [] },
-  general2: { users: [], messages: [] },
-  general3: { users: [], messages: [] },
+  chat_1: { users: [], messages: [] },
+  chat_2: { users: [], messages: [] },
+  chat_3: { users: [], messages: [] },
 }
 
 io.on('connection', onConnected)
@@ -75,13 +75,14 @@ function onConnected(socket) {
     name: session.user,
     id: socket.id,
     rooms: Object.keys(rooms).map(String),
-    currentRoom: 'general'
+    currentRoom: 'chat_1'
   }
     
-  socket.join('general')
-  rooms['general'].users.push(socket.id)
+  socket.join('chat_1')
+  rooms['chat_1'].users.push(socket.id)
   console.log(`User: ${user.name}, Socket ID: ${socket.id}`)
 
+  verifyRooms()
   session.user = user
 
   console.log(user)
@@ -93,6 +94,7 @@ function onConnected(socket) {
     rooms[user.currentRoom].users = rooms[user.currentRoom].users.filter((user) => user !== socket.id)
     socket.join(roomName)
     user.currentRoom = roomName
+    verifyRooms()
 
     if (!user.rooms.includes(roomName)) {
       user.rooms.push(roomName)
@@ -102,7 +104,7 @@ function onConnected(socket) {
       rooms[roomName].users.push(socket.id)
     }
 
-    socket.emit('joined-room', user.name, user.currentRoom, rooms[user.currentRoom].messages)
+    socket.emit('joined-room', user.name, rooms[user.currentRoom].messages)
   })
 
   socket.on('disconnect', () => {
@@ -111,14 +113,16 @@ function onConnected(socket) {
     io.emit("total-clients", usersConnected.size)
 
     user.rooms = user.rooms.filter(roomName => rooms[roomName].users.includes(socket.id))
+    verifyRooms()
   })
 
   socket.on('message', (room, data) => {
     if (room === user.currentRoom) {
+      let isOwnMessage = false;
+      if (data.name === user.name) isOwnMessage = true;
       console.log(data)
       rooms[user.currentRoom].messages.push(data)
-      socket.to(user.currentRoom).emit('chat-message', { ...data, room: user.currentRoom })
-      logMessage(user.currentRoom, data); // Log the message
+      socket.to(user.currentRoom).emit('chat-message', isOwnMessage, data)
       console.log(rooms[user.currentRoom].messages)
     }
   })
@@ -153,22 +157,6 @@ function onConnected(socket) {
         }
       })
     }
-  }
-
-  function logMessage(room, data) {
-    const logDir = path.join(__dirname, 'logs');
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir);
-    }
-  
-    const logFile = path.join(logDir, `${room}.txt`);
-    const logEntry = `${data.dateTime} - ${data.name}: ${data.message}\n`;
-  
-    fs.appendFile(logFile, logEntry, (err) => {
-      if (err) {
-        console.error('Failed to write to log file:', err);
-      }
-    });
   }
 }
 

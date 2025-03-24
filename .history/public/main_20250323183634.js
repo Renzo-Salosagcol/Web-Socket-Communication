@@ -39,16 +39,9 @@ function sendMessage() {
   messageInput.value = ''
 }
 
-socket.on('self-chat-message', (data) => {
-  if (data.room === currentRoom) {
-    addMessageToUI(true, data, false)
-  }
-})
-
-socket.on('chat-message', (data) => {
-  if (data.room === currentRoom) {
-    addMessageToUI(false, data, false)
-  }
+socket.on('chat-message', (isOwnMessage, data) => {
+  // console.log(data)
+  addMessageToUI(false, data, false)
 })
 
 function addMessageToUI(isOwnMessage, data, messageHistory) {
@@ -154,8 +147,7 @@ socket.on('new-user', user => {
 })
 
 // Joining Rooms
-socket.on('joined-room', (userName, room, messages) => {
-  currentRoom = room
+socket.on('joined-room', (userName, messages) => {
   messages.forEach((message) => {
     if (message.name === userName) {
       addMessageToUI(true, message, true)

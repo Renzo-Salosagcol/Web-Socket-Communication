@@ -34,21 +34,14 @@ function sendMessage() {
     dateTime: new Date()
   }
 
-  socket.emit('message', currentRoom, data)
+  socket.emit('message', data)
   addMessageToUI(true, data, false)
   messageInput.value = ''
 }
 
-socket.on('self-chat-message', (data) => {
-  if (data.room === currentRoom) {
-    addMessageToUI(true, data, false)
-  }
-})
-
 socket.on('chat-message', (data) => {
-  if (data.room === currentRoom) {
-    addMessageToUI(false, data, false)
-  }
+  // console.log(data)
+  addMessageToUI(false, data, false)
 })
 
 function addMessageToUI(isOwnMessage, data, messageHistory) {
@@ -83,20 +76,20 @@ function scrollToBottom() {
 }
 
 messageInput.addEventListener('focus', (e) => {
-  socket.emit('feedback', currentRoom, {
+  socket.emit('feedback', {
     feedback: `${nameInput.value} is typing...`
   })
 })
 
 messageInput.addEventListener('keypress', (e) => { 
   clearFeedback()
-  socket.emit('feedback', currentRoom, {
+  socket.emit('feedback', {
     feedback: `${nameInput.value} is typing...`
   })
 })
 
 messageInput.addEventListener('blur', (e) => { 
-  socket.emit('feedback', currentRoom, {
+  socket.emit('feedback', {
     feedback: ``
   })
 })
@@ -154,8 +147,7 @@ socket.on('new-user', user => {
 })
 
 // Joining Rooms
-socket.on('joined-room', (userName, room, messages) => {
-  currentRoom = room
+socket.on('joined-room', (userName, messages) => {
   messages.forEach((message) => {
     if (message.name === userName) {
       addMessageToUI(true, message, true)

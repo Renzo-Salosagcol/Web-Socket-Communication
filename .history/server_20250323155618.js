@@ -62,11 +62,7 @@ let usersConnected = new Set()
 
 const rooms = {
   general: { users: [], messages: [] },
-  general2: { users: [], messages: [] },
-  general3: { users: [], messages: [] },
 }
-
-io.on('connection', onConnected)
 
 function onConnected(socket) {
   const session = socket.request.session;
@@ -74,7 +70,7 @@ function onConnected(socket) {
   const user = {
     name: session.user,
     id: socket.id,
-    rooms: Object.keys(rooms).map(String),
+    rooms: ['general'],
     currentRoom: 'general'
   }
     
@@ -82,15 +78,12 @@ function onConnected(socket) {
   rooms['general'].users.push(socket.id)
   console.log(`User: ${user.name}, Socket ID: ${socket.id}`)
 
-  session.user = user
+  verifyRooms()
 
   console.log(user)
   usersConnected.add(user)
 
-  io.emit('new-user', user)
-
   socket.on("join-room", (roomName, cb) => {
-    rooms[user.currentRoom].users = rooms[user.currentRoom].users.filter((user) => user !== socket.id)
     socket.join(roomName)
     user.currentRoom = roomName
 
@@ -101,32 +94,22 @@ function onConnected(socket) {
     if (!rooms[roomName].users.includes(socket.id)) {
       rooms[roomName].users.push(socket.id)
     }
-
-    socket.emit('joined-room', user.name, user.currentRoom, rooms[user.currentRoom].messages)
   })
 
   socket.on('disconnect', () => {
     console.log('Disconnected: ', socket.id)
     usersConnected.delete(socket.id)
     io.emit("total-clients", usersConnected.size)
-
-    user.rooms = user.rooms.filter(roomName => rooms[roomName].users.includes(socket.id))
   })
 
-  socket.on('message', (room, data) => {
-    if (room === user.currentRoom) {
-      console.log(data)
-      rooms[user.currentRoom].messages.push(data)
-      socket.to(user.currentRoom).emit('chat-message', { ...data, room: user.currentRoom })
-      logMessage(user.currentRoom, data); // Log the message
-      console.log(rooms[user.currentRoom].messages)
-    }
+  socket.on('message', (data) => {
+    console.log(data)
+    rooms[currentRoom].messages.push(data)
+    socket.to(user.currentRoom).broadcast.emit('chat-message', data)
   })
 
-  socket.on('feedback', (room, data) => {
-    if (room === user.currentRoom) {
-      socket.to(user.currentRoom).emit('feedback', data)
-    }
+  socket.on('feedback', (data) => {
+    socket.broadcast.to(user.currentRoom).emit('feedback', data)
   })
 
   function verifyRooms() {
@@ -154,22 +137,6 @@ function onConnected(socket) {
       })
     }
   }
-
-  function logMessage(room, data) {
-    const logDir = path.join(__dirname, 'logs');
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir);
-    }
-  
-    const logFile = path.join(logDir, `${room}.txt`);
-    const logEntry = `${data.dateTime} - ${data.name}: ${data.message}\n`;
-  
-    fs.appendFile(logFile, logEntry, (err) => {
-      if (err) {
-        console.error('Failed to write to log file:', err);
-      }
-    });
-  }
 }
 
 // Authentication
@@ -177,8 +144,14 @@ function onConnected(socket) {
 app.set('views', path.join(__dirname, 'views'))
 
 app.get('/', checkAuthenticated, (req, res) => {
-  res.render('index.ejs', { name: req.user.name, rooms: rooms });
-});
+  let userRooms = []
+  usersConnected.forEach((user) => {
+    if (user.name === req.user.name) {
+      userRooms = user.rooms
+    }
+  })
+  res.render('index.ejs', { name : req.user.name, rooms: userRooms })
+})
 
 // GET Login
 app.get('/login', checkNotAuthenticated, (req, res) => {
@@ -235,10 +208,11 @@ function checkAuthenticated(req, res, next){
 
 function checkNotAuthenticated(req,res,next){
    if (req.isAuthenticated()) {
-    req.session.user = req.user.name
     return res.redirect('/')
    }
    next()
 }
+
+io.on('connection', onConnected)
 
 app.listen(3000)

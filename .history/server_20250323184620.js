@@ -82,6 +82,7 @@ function onConnected(socket) {
   rooms['general'].users.push(socket.id)
   console.log(`User: ${user.name}, Socket ID: ${socket.id}`)
 
+  verifyRooms()
   session.user = user
 
   console.log(user)
@@ -93,6 +94,7 @@ function onConnected(socket) {
     rooms[user.currentRoom].users = rooms[user.currentRoom].users.filter((user) => user !== socket.id)
     socket.join(roomName)
     user.currentRoom = roomName
+    verifyRooms()
 
     if (!user.rooms.includes(roomName)) {
       user.rooms.push(roomName)
@@ -111,6 +113,7 @@ function onConnected(socket) {
     io.emit("total-clients", usersConnected.size)
 
     user.rooms = user.rooms.filter(roomName => rooms[roomName].users.includes(socket.id))
+    verifyRooms()
   })
 
   socket.on('message', (room, data) => {

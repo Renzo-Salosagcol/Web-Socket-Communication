@@ -7,9 +7,7 @@ const messageContainer = document.getElementById('message-container')
 const username = document.getElementById('name-input').value;
 const messageForm = document.getElementById('message-form')
 const messageInput = document.getElementById('message-input')
-const roomButtons = document.getElementById('room-buttons')
 let rooms = []
-currentRoom = 'general'
 
 socket.on("total-clients", (data) => {
   totalClients.innerText = `Total Clients Connected: ${data}`
@@ -34,21 +32,14 @@ function sendMessage() {
     dateTime: new Date()
   }
 
-  socket.emit('message', currentRoom, data)
+  socket.emit('message', data)
   addMessageToUI(true, data, false)
   messageInput.value = ''
 }
 
-socket.on('self-chat-message', (data) => {
-  if (data.room === currentRoom) {
-    addMessageToUI(true, data, false)
-  }
-})
-
 socket.on('chat-message', (data) => {
-  if (data.room === currentRoom) {
-    addMessageToUI(false, data, false)
-  }
+  // console.log(data)
+  addMessageToUI(false, data, false)
 })
 
 function addMessageToUI(isOwnMessage, data, messageHistory) {
@@ -83,20 +74,20 @@ function scrollToBottom() {
 }
 
 messageInput.addEventListener('focus', (e) => {
-  socket.emit('feedback', currentRoom, {
+  socket.emit('feedback', {
     feedback: `${nameInput.value} is typing...`
   })
 })
 
 messageInput.addEventListener('keypress', (e) => { 
   clearFeedback()
-  socket.emit('feedback', currentRoom, {
+  socket.emit('feedback', {
     feedback: `${nameInput.value} is typing...`
   })
 })
 
 messageInput.addEventListener('blur', (e) => { 
-  socket.emit('feedback', currentRoom, {
+  socket.emit('feedback', {
     feedback: ``
   })
 })
@@ -144,18 +135,18 @@ function rateLimit(func, delay, maxCalls) {
 
 // List Joinable Rooms
 socket.on('new-user', user => {
-  roomButtons.innerHTML = '';
-
   user.rooms.forEach(room => {
-    const roomButton = document.createElement('button')
-    roomButton.innerText = room
-    roomButtons.appendChild(roomButton)
+    if (!rooms.includes(room)) {
+      rooms.push(room)
+      const roomButton = document.createElement('button')
+      roomButton.innerText = room
+      roomButtons.appendChild(roomButton)
+    }
   })
 })
 
 // Joining Rooms
-socket.on('joined-room', (userName, room, messages) => {
-  currentRoom = room
+socket.on('joined-room', (userName, messages) => {
   messages.forEach((message) => {
     if (message.name === userName) {
       addMessageToUI(true, message, true)
@@ -168,6 +159,8 @@ socket.on('joined-room', (userName, room, messages) => {
 })
 
 // Room Buttons
+const roomButtons = document.getElementById('room-buttons')
+
 roomButtons.addEventListener('click', (e) => {
   if (e.target.tagName === 'BUTTON') {
     const roomName = e.target.innerText;
