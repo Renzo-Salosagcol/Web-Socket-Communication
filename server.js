@@ -20,6 +20,23 @@ const methodOverride = require('method-override');
 
 const initializePassport = require('./passport-config');
 
+// =============== Rate Limiting ===============
+const rateLimit = require('express-rate-limit');
+
+// Brute Force Protection for Login
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Max 5 attempts per IP
+  message: "Too many login attempts, please try again after 15 minutes."
+});
+// =============================================
+
+// ============== Account Lockout ==============
+// Track failed attempts
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 30 * 60 * 1000; // 30 minutes
+// =============================================
+
 // Load users from JSON file
 const usersFile = path.join(__dirname, 'users.json');
 let users = [];
@@ -57,7 +74,7 @@ const sessionMiddleware = session({
 
 app.set('io', io)
 app.set('view-engine', 'ejs')
-app.use(express.urlencoded({ extended: false}))
+app.use(express.urlencoded({ extended: false }))
 app.use(flash())
 app.use(sessionMiddleware)
 app.use(passport.initialize())
@@ -91,7 +108,7 @@ function onConnected(socket) {
     rooms: Object.keys(rooms).map(String),
     currentRoom: 'general'
   }
-    
+
   socket.join('general')
   rooms['general'].users.push(socket.id)
   console.log(`User: ${user.name}, Socket ID: ${socket.id}`)
@@ -149,18 +166,18 @@ function onConnected(socket) {
       if (room.users.includes(socket.id)) {
         room.users = room.users.filter((user) => user !== socket.id)
       }
-  
+
       if (roomName.includes(socket.id)) {
         user.rooms.push(roomName)
       }
     })
-  
+
     if (usersConnected.size > 1) {
       usersConnected.forEach((user) => {
         if (user.id !== socket.id) {
           const privateRoom = [user.id, socket.id].sort().join('-')
           rooms[privateRoom] = { users: [user.id, socket.id], messages: [] }
-  
+
           if (!user.rooms.includes(privateRoom)) {
             user.rooms.push(privateRoom)
           }
@@ -174,10 +191,10 @@ function onConnected(socket) {
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir);
     }
-  
+
     const logFile = path.join(logDir, `${room}.txt`);
     const logEntry = `${data.dateTime} - ${data.name}: ${data.message}\n`;
-  
+
     fs.appendFile(logFile, logEntry, (err) => {
       if (err) {
         console.error('Failed to write to log file:', err);
@@ -201,28 +218,45 @@ app.get('/login', checkNotAuthenticated, (req, res) => {
 
 // POST Login
 app.post('/login', checkNotAuthenticated, async (req, res) => {
-  const hashedEmail = hashEmail(req.body.email); // Hash the email for lookup
+  const hashedEmail = hashEmail(req.body.email);
   const user = users.find(user => user.email === hashedEmail);
 
   if (!user) {
     return res.redirect('/login');
   }
 
+  const now = Date.now();
+
+  // Check if account is locked
+  if (user.lockUntil && user.lockUntil > now) {
+    return res.status(403).send('Account locked. Try again later.');
+  }
+
   try {
     if (await bcrypt.compare(req.body.password, user.password)) {
+      user.failedAttempts = 0;
+      user.lockUntil = null; // Reset lockout
       req.login(user, err => {
         if (err) return res.status(500).send('Login error');
         res.redirect('/');
       });
     } else {
+      user.failedAttempts = (user.failedAttempts || 0) + 1;
+
+      if (user.failedAttempts >= MAX_ATTEMPTS) {
+        user.lockUntil = now + LOCKOUT_DURATION;
+        return res.status(403).send('Too many attempts. Account locked for 30 minutes.');
+      }
+
       res.redirect('/login');
     }
   } catch {
     res.redirect('/login');
   }
+
+  // Save updated users
+  fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
 });
-
-
 // GET Register
 app.get('/register', checkNotAuthenticated, (req, res) => {
   res.render('register.ejs');
@@ -272,12 +306,12 @@ function checkAuthenticated(req, res, next) {
   res.redirect('/login');
 }
 
-function checkNotAuthenticated(req,res,next){
-   if (req.isAuthenticated()) {
+function checkNotAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
     req.session.user = req.user.name
     return res.redirect('/')
-   }
-   next()
+  }
+  next()
 }
 
 app.listen(3000);
