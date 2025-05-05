@@ -5,10 +5,11 @@ if (process.env.NODE_ENV !== 'production') {
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const https = require('https');
+// const https = require('https');
+const http = require('http');
 const app = express();
 const PORT = process.env.PORT || 4000;
-const LOCAL_IP = '192.168.12.135'; // Replace with your local IP address
+// const LOCAL_IP = '192.168.12.134'; // Replace with your local IP address
 
 // ------------------------------------------------------------------
 
@@ -59,10 +60,12 @@ initializePassport(
   id => users.find(user => user.id === id)
 );
 
-const server = https.createServer({
+// Render does not work with https certificates
+/*const server = https.createServer({
   key: fs.readFileSync(path.join(__dirname, 'certs/private.key')),
   cert: fs.readFileSync(path.join(__dirname, 'certs/certificate.crt'))
-}, app);
+}, app);*/
+const server = http.createServer(app);
 
 const io = require('socket.io')(server)
 
@@ -85,7 +88,9 @@ io.engine.use(sessionMiddleware);
 
 // ------------------------------------------------------------------
 
-server.listen(PORT, LOCAL_IP, () => console.log(`Chat server running on https://${LOCAL_IP}:${PORT}`))
+// server.listen(PORT, LOCAL_IP, () => console.log(`Chat server running on https://${LOCAL_IP}:${PORT}`))
+server.listen(PORT, () => console.log(`Chat server running on port ${PORT}`));
+
 
 app.use(express.static(path.join(__dirname, 'public')));
 

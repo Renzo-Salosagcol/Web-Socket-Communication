@@ -1,4 +1,5 @@
-const socket = io("wss://192.168.12.135:4000") // Replace with your local IP address
+// const socket = io("wss://192.168.12.134:4000") // Replace with your local IP address
+const socket = io();
 
 const totalClients = document.getElementById('clients-total')
 
@@ -152,8 +153,6 @@ function formatMessage(text) {
 
   return text;
 }
-
-
 
 // Rate Limiting
 function rateLimit(func, delay, maxCalls) {
