@@ -69,11 +69,19 @@ const server = http.createServer(app);
 
 const io = require('socket.io')(server)
 
-const sessionMiddleware = session({
+// REUQUIRES SECRET KEY FOR SESSION
+/* const sessionMiddleware = session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+});*/
+
+const sessionMiddleware = session({
+  secret: process.env.SESSION_SECRET || 'fallback-secret',
+  resave: false,
+  saveUninitialized: false,
 });
+
 
 app.set('io', io)
 app.set('view-engine', 'ejs')
