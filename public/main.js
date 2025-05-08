@@ -1,5 +1,5 @@
 // const socket = io("wss://192.168.12.134:4000") // Replace with your local IP address
-const socket = io();
+const socket = io("wss://yap-sessions.onrender.com")
 
 const totalClients = document.getElementById('clients-total')
 

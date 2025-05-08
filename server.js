@@ -38,13 +38,15 @@ const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 30 * 60 * 1000; // 30 minutes
 // =============================================
 
-// Load users from JSON file
-const usersFile = path.join(__dirname, 'users.json');
-let users = [];
+// // Load users from JSON file
+// const usersFile = path.join(__dirname, 'users.json');
+// let users = [];
 
-if (fs.existsSync(usersFile)) {
-  users = JSON.parse(fs.readFileSync(usersFile));
-}
+// if (fs.existsSync(usersFile)) {
+//   users = JSON.parse(fs.readFileSync(usersFile));
+// }
+
+const db = require('./db');
 
 // Hash Emails
 const crypto = require('crypto'); // For hashing emails securely
@@ -54,11 +56,25 @@ function hashEmail(email) {
   return crypto.createHash('sha256').update(email.toLowerCase()).digest('hex');
 }
 
+// initializePassport(
+//   passport,
+//   email => users.find(user => user.email === email),
+//   id => users.find(user => user.id === id)
+// );
+
 initializePassport(
   passport,
-  email => users.find(user => user.email === email),
-  id => users.find(user => user.id === id)
+  async email => {
+    const hashedEmail = hashEmail(email);
+    const [rows] = await db.execute('SELECT * FROM users WHERE email = ?', [hashedEmail]);
+    return rows[0];
+  },
+  async id => {
+    const [rows] = await db.execute('SELECT * FROM users WHERE id = ?', [id]);
+    return rows[0];
+  }
 );
+
 
 // Render does not work with https certificates
 /*const server = https.createServer({
@@ -230,9 +246,52 @@ app.get('/login', checkNotAuthenticated, (req, res) => {
 });
 
 // POST Login
+// app.post('/login', checkNotAuthenticated, async (req, res) => {
+//   const hashedEmail = hashEmail(req.body.email);
+//   const user = users.find(user => user.email === hashedEmail);
+
+//   if (!user) {
+//     return res.redirect('/login');
+//   }
+
+//   const now = Date.now();
+
+//   // Check if account is locked
+//   if (user.lockUntil && user.lockUntil > now) {
+//     return res.status(403).send('Account locked. Try again later.');
+//   }
+
+//   try {
+//     if (await bcrypt.compare(req.body.password, user.password)) {
+//       user.failedAttempts = 0;
+//       user.lockUntil = null; // Reset lockout
+//       req.login(user, err => {
+//         if (err) return res.status(500).send('Login error');
+//         res.redirect('/');
+//       });
+//     } else {
+//       user.failedAttempts = (user.failedAttempts || 0) + 1;
+
+//       if (user.failedAttempts >= MAX_ATTEMPTS) {
+//         user.lockUntil = now + LOCKOUT_DURATION;
+//         return res.status(403).send('Too many attempts. Account locked for 30 minutes.');
+//       }
+
+//       res.redirect('/login');
+//     }
+//   } catch {
+//     res.redirect('/login');
+//   }
+
+//   // Save updated users
+//   fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
+// });
+
 app.post('/login', checkNotAuthenticated, async (req, res) => {
   const hashedEmail = hashEmail(req.body.email);
-  const user = users.find(user => user.email === hashedEmail);
+
+  const [results] = await db.execute('SELECT * FROM users WHERE email = ?', [hashedEmail]);
+  const user = results[0];
 
   if (!user) {
     return res.redirect('/login');
@@ -240,64 +299,86 @@ app.post('/login', checkNotAuthenticated, async (req, res) => {
 
   const now = Date.now();
 
-  // Check if account is locked
   if (user.lockUntil && user.lockUntil > now) {
     return res.status(403).send('Account locked. Try again later.');
   }
 
   try {
-    if (await bcrypt.compare(req.body.password, user.password)) {
-      user.failedAttempts = 0;
-      user.lockUntil = null; // Reset lockout
+    const match = await bcrypt.compare(req.body.password, user.password);
+    if (match) {
+      await db.execute('UPDATE users SET failedAttempts = 0, lockUntil = NULL WHERE id = ?', [user.id]);
       req.login(user, err => {
         if (err) return res.status(500).send('Login error');
         res.redirect('/');
       });
     } else {
-      user.failedAttempts = (user.failedAttempts || 0) + 1;
+      const attempts = (user.failedAttempts || 0) + 1;
+      const lockUntil = attempts >= MAX_ATTEMPTS ? now + LOCKOUT_DURATION : null;
 
-      if (user.failedAttempts >= MAX_ATTEMPTS) {
-        user.lockUntil = now + LOCKOUT_DURATION;
+      await db.execute(
+        'UPDATE users SET failedAttempts = ?, lockUntil = ? WHERE id = ?',
+        [attempts, lockUntil, user.id]
+      );
+
+      if (lockUntil) {
         return res.status(403).send('Too many attempts. Account locked for 30 minutes.');
       }
 
       res.redirect('/login');
     }
-  } catch {
+  } catch (err) {
+    console.error(err);
     res.redirect('/login');
   }
-
-  // Save updated users
-  fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
 });
+
+
 // GET Register
 app.get('/register', checkNotAuthenticated, (req, res) => {
   res.render('register.ejs');
 });
 
 // POST Register
+// app.post('/register', checkNotAuthenticated, async (req, res) => {
+//   try {
+//     const hashedPassword = await bcrypt.hash(req.body.password, 10);
+//     const hashedEmail = hashEmail(req.body.email); // Hash the email
+
+//     const newUser = {
+//       id: Date.now().toString(),
+//       name: req.body.name,
+//       email: hashedEmail, // Store the hashed email
+//       password: hashedPassword
+//     };
+
+//     users.push(newUser);
+
+//     // Save updated users array to JSON file
+//     fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
+
+//     res.redirect('/login');
+//   } catch {
+//     res.redirect('/register');
+//   }
+// });
+
 app.post('/register', checkNotAuthenticated, async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    const hashedEmail = hashEmail(req.body.email); // Hash the email
+    const hashedEmail = hashEmail(req.body.email);
 
-    const newUser = {
-      id: Date.now().toString(),
-      name: req.body.name,
-      email: hashedEmail, // Store the hashed email
-      password: hashedPassword
-    };
-
-    users.push(newUser);
-
-    // Save updated users array to JSON file
-    fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
+    await db.execute(
+      'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
+      [req.body.name, hashedEmail, hashedPassword]
+    );
 
     res.redirect('/login');
-  } catch {
+  } catch (err) {
+    console.error(err);
     res.redirect('/register');
   }
 });
+
 
 
 // Logout
