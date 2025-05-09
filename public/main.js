@@ -76,11 +76,20 @@ function addMessageToUI(isOwnMessage, data, messageHistory) {
   clearFeedback()
   let element = ``
   if (!messageHistory) {
+    // element = `
+    //   <li class="${isOwnMessage ? 'message-right' : 'message-left'}">
+    //     <p class="message">
+    //       ${data.message}
+    //       <span>${data.name} * ${moment(data.dateTime).fromNow()}</span>
+    //     </p>
+    //   </li>
+    // `
     element = `
       <li class="${isOwnMessage ? 'message-right' : 'message-left'}">
         <p class="message">
+          <strong>${data.name}</strong><br/>
           ${data.message}
-          <span>${data.name} * ${moment(data.dateTime).fromNow()}</span>
+          <span>${moment(data.dateTime).fromNow()}</span>
         </p>
       </li>
     `
