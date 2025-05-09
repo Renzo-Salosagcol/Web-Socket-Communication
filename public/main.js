@@ -44,6 +44,8 @@ messageForm.addEventListener('submit', (e) => {
   rateLimitedMessage()
 })
 
+console.log("Username from input:", username);
+
 function sendMessage() {
   if (messageInput.value === '') return;
 
