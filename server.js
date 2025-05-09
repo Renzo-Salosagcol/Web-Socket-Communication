@@ -289,31 +289,86 @@ app.get('/login', checkNotAuthenticated, (req, res) => {
 
 
 // v2
+// app.post('/login', checkNotAuthenticated, async (req, res) => {
+//   const hashedEmail = hashEmail(req.body.email);
+
+//   const result = await db.query('SELECT * FROM users WHERE email = $1', [hashedEmail]);
+//   const user = result.rows[0];
+
+//   if (!user) {
+//     return res.redirect('/login');
+//   }
+
+//   const now = Date.now();
+
+//   if (user.lockuntil && user.lockuntil > now) {
+//     return res.status(403).send('Account locked. Try again later.');
+//   }
+
+//   try {
+//     const match = await bcrypt.compare(req.body.password, user.password);
+//     if (match) {
+//       await db.query('UPDATE users SET failedattempts = 0, lockuntil = NULL WHERE id = $1', [user.id]);
+//       req.login(user, err => {
+//         if (err) return res.status(500).send('Login error');
+//         res.redirect('/');
+//       });
+//     } else {
+//       const attempts = (user.failedattempts || 0) + 1;
+//       const lockUntil = attempts >= MAX_ATTEMPTS ? now + LOCKOUT_DURATION : null;
+
+//       await db.query(
+//         'UPDATE users SET failedattempts = $1, lockuntil = $2 WHERE id = $3',
+//         [attempts, lockUntil, user.id]
+//       );
+
+//       if (lockUntil) {
+//         return res.status(403).send('Too many attempts. Account locked for 30 minutes.');
+//       }
+
+//       res.redirect('/login');
+//     }
+//   } catch (err) {
+//     console.error(err);
+//     res.redirect('/login');
+//   }
+// });
+
+// v3
 app.post('/login', checkNotAuthenticated, async (req, res) => {
   const hashedEmail = hashEmail(req.body.email);
 
-  const result = await db.query('SELECT * FROM users WHERE email = $1', [hashedEmail]);
-  const user = result.rows[0];
-
-  if (!user) {
-    return res.redirect('/login');
-  }
-
-  const now = Date.now();
-
-  if (user.lockuntil && user.lockuntil > now) {
-    return res.status(403).send('Account locked. Try again later.');
-  }
-
   try {
+    const result = await db.query('SELECT * FROM users WHERE email = $1', [hashedEmail]);
+    const user = result.rows[0];
+
+    if (!user) {
+      return res.redirect('/login');
+    }
+
+    const now = Date.now();
+
+    // Check if account is currently locked
+    if (user.lockuntil && Number(user.lockuntil) > now) {
+      return res.status(403).send('Account locked. Try again later.');
+    }
+
     const match = await bcrypt.compare(req.body.password, user.password);
+
     if (match) {
-      await db.query('UPDATE users SET failedattempts = 0, lockuntil = NULL WHERE id = $1', [user.id]);
+      // Successful login: reset failedAttempts and lockUntil
+      await db.query(
+        'UPDATE users SET failedattempts = 0, lockuntil = NULL WHERE id = $1',
+        [user.id]
+      );
+
       req.login(user, err => {
         if (err) return res.status(500).send('Login error');
         res.redirect('/');
       });
+
     } else {
+      // Failed login: increment failedAttempts
       const attempts = (user.failedattempts || 0) + 1;
       const lockUntil = attempts >= MAX_ATTEMPTS ? now + LOCKOUT_DURATION : null;
 
