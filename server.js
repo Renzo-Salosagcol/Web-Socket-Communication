@@ -292,8 +292,8 @@ app.get('/login', checkNotAuthenticated, (req, res) => {
 app.post('/login', checkNotAuthenticated, async (req, res) => {
   const hashedEmail = hashEmail(req.body.email);
 
-  const [results] = await db.execute('SELECT * FROM users WHERE email = ?', [hashedEmail]);
-  const user = results[0];
+  const result = await db.query('SELECT * FROM users WHERE email = $1', [hashedEmail]);
+  const user = result.rows[0];
 
   if (!user) {
     return res.redirect('/login');
@@ -301,24 +301,24 @@ app.post('/login', checkNotAuthenticated, async (req, res) => {
 
   const now = Date.now();
 
-  if (user.lockUntil && user.lockUntil > now) {
+  if (user.lockuntil && user.lockuntil > now) {
     return res.status(403).send('Account locked. Try again later.');
   }
 
   try {
     const match = await bcrypt.compare(req.body.password, user.password);
     if (match) {
-      await db.execute('UPDATE users SET failedAttempts = 0, lockUntil = NULL WHERE id = ?', [user.id]);
+      await db.query('UPDATE users SET failedattempts = 0, lockuntil = NULL WHERE id = $1', [user.id]);
       req.login(user, err => {
         if (err) return res.status(500).send('Login error');
         res.redirect('/');
       });
     } else {
-      const attempts = (user.failedAttempts || 0) + 1;
+      const attempts = (user.failedattempts || 0) + 1;
       const lockUntil = attempts >= MAX_ATTEMPTS ? now + LOCKOUT_DURATION : null;
 
-      await db.execute(
-        'UPDATE users SET failedAttempts = ?, lockUntil = ? WHERE id = ?',
+      await db.query(
+        'UPDATE users SET failedattempts = $1, lockuntil = $2 WHERE id = $3',
         [attempts, lockUntil, user.id]
       );
 
@@ -333,6 +333,7 @@ app.post('/login', checkNotAuthenticated, async (req, res) => {
     res.redirect('/login');
   }
 });
+
 
 // GET Register
 app.get('/register', checkNotAuthenticated, (req, res) => {
@@ -368,8 +369,8 @@ app.post('/register', checkNotAuthenticated, async (req, res) => {
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
     const hashedEmail = hashEmail(req.body.email);
 
-    await db.execute(
-      'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
+    await db.query(
+      'INSERT INTO users (name, email, password) VALUES ($1, $2, $3)',
       [req.body.name, hashedEmail, hashedPassword]
     );
 
@@ -379,8 +380,6 @@ app.post('/register', checkNotAuthenticated, async (req, res) => {
     res.redirect('/register');
   }
 });
-
-
 
 // Logout
 app.delete('/logout', (req, res, next) => {
