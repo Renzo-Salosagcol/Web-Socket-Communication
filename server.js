@@ -66,15 +66,14 @@ initializePassport(
   passport,
   async email => {
     const hashedEmail = hashEmail(email);
-    const [rows] = await db.execute('SELECT * FROM users WHERE email = ?', [hashedEmail]);
-    return rows[0];
+    const result = await db.query('SELECT * FROM users WHERE email = $1', [hashedEmail]);
+    return result.rows[0];
   },
   async id => {
-    const [rows] = await db.execute('SELECT * FROM users WHERE id = ?', [id]);
-    return rows[0];
+    const result = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+    return result.rows[0];
   }
 );
-
 
 // Render does not work with https certificates
 /*const server = https.createServer({
@@ -232,13 +231,6 @@ function onConnected(socket) {
   }
 }
 
-// CORS
-const cors = require('cors');
-app.use(cors({
-  origin: 'https://yap-sessionss.infinityfreeapp.com',
-  credentials: true
-}));
-
 // Authentication
 app.set('views', path.join(__dirname, 'views'));
 
@@ -297,72 +289,50 @@ app.get('/login', checkNotAuthenticated, (req, res) => {
 
 
 // v2
-// app.post('/login', checkNotAuthenticated, async (req, res) => {
-//   const hashedEmail = hashEmail(req.body.email);
+app.post('/login', checkNotAuthenticated, async (req, res) => {
+  const hashedEmail = hashEmail(req.body.email);
 
-//   const [results] = await db.execute('SELECT * FROM users WHERE email = ?', [hashedEmail]);
-//   const user = results[0];
+  const [results] = await db.execute('SELECT * FROM users WHERE email = ?', [hashedEmail]);
+  const user = results[0];
 
-//   if (!user) {
-//     return res.redirect('/login');
-//   }
+  if (!user) {
+    return res.redirect('/login');
+  }
 
-//   const now = Date.now();
+  const now = Date.now();
 
-//   if (user.lockUntil && user.lockUntil > now) {
-//     return res.status(403).send('Account locked. Try again later.');
-//   }
+  if (user.lockUntil && user.lockUntil > now) {
+    return res.status(403).send('Account locked. Try again later.');
+  }
 
-//   try {
-//     const match = await bcrypt.compare(req.body.password, user.password);
-//     if (match) {
-//       await db.execute('UPDATE users SET failedAttempts = 0, lockUntil = NULL WHERE id = ?', [user.id]);
-//       req.login(user, err => {
-//         if (err) return res.status(500).send('Login error');
-//         res.redirect('/');
-//       });
-//     } else {
-//       const attempts = (user.failedAttempts || 0) + 1;
-//       const lockUntil = attempts >= MAX_ATTEMPTS ? now + LOCKOUT_DURATION : null;
-
-//       await db.execute(
-//         'UPDATE users SET failedAttempts = ?, lockUntil = ? WHERE id = ?',
-//         [attempts, lockUntil, user.id]
-//       );
-
-//       if (lockUntil) {
-//         return res.status(403).send('Too many attempts. Account locked for 30 minutes.');
-//       }
-
-//       res.redirect('/login');
-//     }
-//   } catch (err) {
-//     console.error(err);
-//     res.redirect('/login');
-//   }
-// });
-
-app.post('/login', loginLimiter, (req, res, next) => {
-  passport.authenticate('local', (err, user, info) => {
-    if (err) return next(err);
-    if (!user) return res.redirect('/login');
-
-    req.logIn(user, (err) => {
-      if (err) return next(err);
-
-      // ✅ Set cookie here
-      res.cookie('token', user.id, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'None'
+  try {
+    const match = await bcrypt.compare(req.body.password, user.password);
+    if (match) {
+      await db.execute('UPDATE users SET failedAttempts = 0, lockUntil = NULL WHERE id = ?', [user.id]);
+      req.login(user, err => {
+        if (err) return res.status(500).send('Login error');
+        res.redirect('/');
       });
+    } else {
+      const attempts = (user.failedAttempts || 0) + 1;
+      const lockUntil = attempts >= MAX_ATTEMPTS ? now + LOCKOUT_DURATION : null;
 
-      return res.redirect('/');
-    });
-  })(req, res, next);
+      await db.execute(
+        'UPDATE users SET failedAttempts = ?, lockUntil = ? WHERE id = ?',
+        [attempts, lockUntil, user.id]
+      );
+
+      if (lockUntil) {
+        return res.status(403).send('Too many attempts. Account locked for 30 minutes.');
+      }
+
+      res.redirect('/login');
+    }
+  } catch (err) {
+    console.error(err);
+    res.redirect('/login');
+  }
 });
-
-
 
 // GET Register
 app.get('/register', checkNotAuthenticated, (req, res) => {

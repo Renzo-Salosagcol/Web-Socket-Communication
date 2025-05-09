@@ -1,11 +1,10 @@
 // db.js
-const mysql = require('mysql2');
+const { Pool } = require('pg');
+require('dotenv').config();
 
-const pool = mysql.createPool({
-    host: 'sql109.infinityfree.com',      // replace with your actual host
-    user: 'if0_38874660',         // replace with your InfinityFree username
-    password: 'vF6Q11hUHg5jHbF',      // replace with your InfinityFree password
-    database: 'if0_38874660_yap_data'   // replace with your database name
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false } // Required for Neon
 });
 
-module.exports = pool.promise();
+module.exports = pool;
