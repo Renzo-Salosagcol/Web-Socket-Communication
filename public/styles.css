@@ -124,10 +124,3 @@ body {
 .message u {
   text-decoration: underline;
 }
-
-.active-room {
-  background-color: #4DA6FF;
-  color: black;
-  font-weight: bold;
-  border: 2px solid white;
-}

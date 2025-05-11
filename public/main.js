@@ -221,8 +221,6 @@ socket.on('joined-room', (userName, room, messages) => {
     }
   })
 
-  highlightActiveRoom(room);
-
   rooms = user.rooms;
 })
 
@@ -231,24 +229,8 @@ roomButtons.addEventListener('click', (e) => {
   if (e.target.tagName === 'BUTTON') {
     const roomName = e.target.innerText;
     clearMessages()
-    highlightAciveRoom(roomName);
     socket.emit('join-room', roomName);
   }
-});
-
-function highlightActiveRoom(roomName) {
-  const buttons = document.querySelectorAll('#room-buttons button');
-  buttons.forEach(btn => {
-    if (btn.innerText === roomName) {
-      btn.classList.add('active-room');
-    } else {
-      btn.classList.remove('active-room');
-    }
-  });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  highlightActiveRoom('general');
 });
 
 function clearMessages() {
