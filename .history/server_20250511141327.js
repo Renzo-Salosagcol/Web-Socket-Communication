@@ -127,6 +127,7 @@ let rooms = (async () => {
 
     return rooms
 
+    console.log('Rooms loaded from database:', rooms);
   } catch (err) {
     console.error('Error loading rooms from database:', err);
   }
