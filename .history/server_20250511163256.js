@@ -200,7 +200,7 @@ function onConnected(socket) {
     try {
       await db.query(
         'INSERT INTO messages (timeStamp, name, message, room) VALUES ($1, $2, $3, $4)', 
-        [data.dateTime.toString(), data.name.toString(), data.message.toString(), room.toString()]
+        [data.dateTime.toString(), data.name, data.message, room]
       )
 
       console.log(`Message added to room: ${room}`);
