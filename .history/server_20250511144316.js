@@ -351,14 +351,7 @@ async function getDBRooms() {
 }
 
 async function addUserToRoom() {
-  try {
-    const result = await pool.query('SELECT * FROM rooms');
-    let rooms = result.rows.map(row => row.room_name);
-    console.log(rooms)
-    return rooms
-  } catch (err) {
-    console.error('Error loading rooms from database:', err);
-  }
+  
 }
 
 app.listen(3000);
