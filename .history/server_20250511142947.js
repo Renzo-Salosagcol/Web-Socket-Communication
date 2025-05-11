@@ -344,6 +344,7 @@ async function getDBRooms() {
     const result = await pool.query('SELECT * FROM rooms');
     const rooms = result.rows.reduce((acc, row) => {
       acc.push(row.room_name)
+
       return acc;
     }, {});
 
