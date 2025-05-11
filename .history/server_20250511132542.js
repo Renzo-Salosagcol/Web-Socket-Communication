@@ -116,9 +116,6 @@ let usersConnected = new Set()
 
 const rooms = await db.query('SELECT * FROM rooms');
 
-console.log(rooms)
-console.log(rooms.rows)
-
 io.on('connection', onConnected);
 
 function onConnected(socket) {
