@@ -61,7 +61,7 @@ function sendMessage() {
 
   socket.emit('message', currentRoom, data)
   const decrypted = CryptoJS.AES.decrypt(data.message, SECRET_KEY).toString(CryptoJS.enc.Utf8);
-  addMessageToUI(true, data, false)
+  addMessageToUI(true,{ ...data, message: decrypted }, false)
   messageInput.value = ''
 }
 
