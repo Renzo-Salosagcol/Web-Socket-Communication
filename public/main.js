@@ -66,12 +66,14 @@ function sendMessage() {
 
 socket.on('self-chat-message', (data) => {
   if (data.room === currentRoom) {
+    data.message = CryptoJS.AES.decrypt(data.message, SECRET_KEY).toString(CryptoJS.enc.Utf8);
     addMessageToUI(true, data, false)
   }
 })
 
 socket.on('chat-message', (data) => {
   if (data.room === currentRoom) {
+    data.message = CryptoJS.AES.decrypt(data.message, SECRET_KEY).toString(CryptoJS.enc.Utf8);
     addMessageToUI(false, data, false)
   }
 })
@@ -205,6 +207,8 @@ socket.on('new-user', user => {
 socket.on('joined-room', (userName, room, messages) => {
   currentRoom = room
   messages.forEach((message) => {
+    message.message = CryptoJS.AES.decrypt(message.message, SECRET_KEY).toString(CryptoJS.enc.Utf8);
+    
     if (message.name === userName) {
       addMessageToUI(true, message, true)
     } else {
