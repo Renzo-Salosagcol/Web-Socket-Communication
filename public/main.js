@@ -59,8 +59,13 @@ function sendMessage() {
     dateTime: new Date()
   };
 
-  socket.emit('message', currentRoom, data)
-  addMessageToUI(true, data, false)
+  try {
+    const decrypted = CryptoJS.AES.decrypt(data.message, SECRET_KEY).toString(CryptoJS.enc.Utf8);
+    addMessageToUI(true, { ...data, message: decrypted }, false);
+  } catch (err) {
+    console.error("Decryption failed in sendMessage():", err);
+    addMessageToUI(true, data, false); // fallback to show encrypted if needed
+  }
   messageInput.value = ''
 }
 
