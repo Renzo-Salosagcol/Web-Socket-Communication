@@ -114,7 +114,25 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 let usersConnected = new Set()
 
-let rooms = getDBRooms();
+let rooms = (async () => {
+  try {
+    const result = await pool.query('SELECT * FROM rooms');
+    const rooms = result.rows.reduce((acc, row) => {
+      acc[row.room_name] = {
+        users: row.users || [], // Ensure users is an array
+        messages: row.messages || [] // Ensure messages is an array
+      };
+      return acc[row.room_name];
+    }, {});
+
+
+
+    return rooms
+
+  } catch (err) {
+    console.error('Error loading rooms from database:', err);
+  }
+})();
 
 console.log(rooms)
 
@@ -338,25 +356,9 @@ function checkNotAuthenticated(req, res, next) {
   next()
 }
 
-// Database Functions
-async function getDBRooms() {
-  try {
-    const result = await pool.query('SELECT * FROM rooms');
-    const rooms = result.rows.reduce((acc, row) => {
-      acc[row.room_name] = {
-        users: row.users || [], // Ensure users is an array
-        messages: row.messages || [] // Ensure messages is an array
-      };
-
-      console.log('Room:', row.room_name, 'Users:', row.users, 'Messages:', row.messages);
-      return acc[row.room_name];
-    }, {});
-
-    return rooms
-
-  } catch (err) {
-    console.error('Error loading rooms from database:', err);
-  }
+// Database
+async function dbQuery(query) {
+  return await db.query(query)
 }
 
 app.listen(3000);
