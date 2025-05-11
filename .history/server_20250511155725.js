@@ -199,7 +199,7 @@ function onConnected(socket) {
   async function addMessageToDB(room, data) {
     try {
       await pool.query(
-        'INSERT INTO messages (timeStamp, name, message, room) VALUES ($1, $2, $3)', 
+        'INSERT INTO messages (dateTime, name, message, room) VALUES ($1, $2, $3)', 
         [data.dateTime, data.name, data.message, room]
       )
 
