@@ -74,10 +74,7 @@ initializePassport(
 }, app);*/
 const server = http.createServer(app);
 
-const io = require('socket.io')(server, {
-  pingInterval: 10000, // how often to ping/pong.
-  pingTimeout: 30000 // time after which the connection is considered timed-out.
-})
+const io = require('socket.io')(server)
 
 // REUQUIRES SECRET KEY FOR SESSION
 /* const sessionMiddleware = session({
