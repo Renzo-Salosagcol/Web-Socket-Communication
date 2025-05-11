@@ -178,8 +178,11 @@ function onConnected(socket) {
 
   socket.on('message', (room, data) => {
     if (room === user.currentRoom) {
-      addMessageToDB(user.currentRoom, data)
+      console.log(data)
+      rooms[user.currentRoom].messages.push(data)
       socket.to(user.currentRoom).emit('chat-message', { ...data, room: user.currentRoom })
+      logMessage(user.currentRoom, data); // Log the message
+      console.log(rooms[user.currentRoom].messages)
     }
   })
 
@@ -190,7 +193,7 @@ function onConnected(socket) {
   })
 
   // Database Functions for Message Logging
-  async function addMessageToDB(room, data) {
+  async function addMessage(room, data) {
     try {
       await pool.query(
         'UPDATE rooms SET messages = array_append(messages, $1) WHERE room_name = $2',
@@ -201,7 +204,7 @@ function onConnected(socket) {
       console.error('❌ Failed to log message to Neon DB:', err);
     }
   }
-  async function getRoomMessagesDB(room) {
+  async function getMessages(room) {
     try {
       const result = await pool.query('SELECT * FROM messages WHERE room = $1', [room]);
       return result.rows;

@@ -180,6 +180,8 @@ function onConnected(socket) {
     if (room === user.currentRoom) {
       addMessageToDB(user.currentRoom, data)
       socket.to(user.currentRoom).emit('chat-message', { ...data, room: user.currentRoom })
+      logMessage(user.currentRoom, data); // Log the message
+      console.log(rooms[user.currentRoom].messages)
     }
   })
 
