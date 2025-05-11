@@ -217,7 +217,7 @@ function onConnected(socket) {
         console.error('❌ Failed to log message to Neon DB:', err);
         res.status(500).send('Failed to log message');
       }
-    })
+    }
   }
 
   async function getRoomMessagesDB(room) {
