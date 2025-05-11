@@ -114,7 +114,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 let usersConnected = new Set()
 
-const rooms = dbQuery('SELECT * FROM rooms')
+const rooms = await db.query('SELECT * FROM rooms');
 
 console.log(rooms)
 console.log(rooms.rows)
@@ -340,7 +340,7 @@ function checkNotAuthenticated(req, res, next) {
 }
 
 // Database
-async function dbQuery(query) {
+async function returnDBQuery(query) {
   return await db.query(query)
 }
 
