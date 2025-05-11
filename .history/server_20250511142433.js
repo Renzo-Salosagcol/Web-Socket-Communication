@@ -343,11 +343,18 @@ async function getDBRooms() {
   try {
     const result = await pool.query('SELECT * FROM rooms');
     const rooms = result.rows.reduce((acc, row) => {
-      return row.room_name;
+      acc[row.room_name] = {
+        users: row.users || [], // Ensure users is an array
+        messages: row.messages || [] // Ensure messages is an array
+      };
+
+      console.log('Room:', row.room_name, 'Users:', row.users, 'Messages:', row.messages);
+      return acc[row.room_name];
     }, {});
 
     console.log(rooms);
     return rooms
+
   } catch (err) {
     console.error('Error loading rooms from database:', err);
   }
