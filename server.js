@@ -1,3 +1,10 @@
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL, // Render already has this
+  ssl: { rejectUnauthorized: false }
+});
+
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
@@ -201,20 +208,14 @@ function onConnected(socket) {
   }
 
   // Function to log messages to a file
-  function logMessage(room, data) {
-    const logDir = path.join(__dirname, 'logs');
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir);
-    }
-
-    const logFile = path.join(logDir, `${room}.txt`);
-    const logEntry = `${data.dateTime} - ${data.name}: ${data.message}\n`;
-
-    fs.appendFile(logFile, logEntry, (err) => {
-      if (err) {
-        console.error('Failed to write to log file:', err);
-      }
-    });
+  async function logMessage(room, data) {
+  try {
+    await pool.query(
+      'INSERT INTO messages (room, name, message, timestamp) VALUES ($1, $2, $3, $4)',
+      [room, data.name, data.message, data.dateTime]
+    );
+  } catch (err) {
+    console.error('❌ Failed to log message to Neon DB:', err);
   }
 }
 
