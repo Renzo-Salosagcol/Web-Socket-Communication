@@ -1,4 +1,7 @@
 // const socket = io("wss://192.168.12.134:4000") // Replace with your local IP address
+
+const SECRET_KEY = "mySuperSecretKey123";
+
 const socket = io("wss://yap-sessions.onrender.com")
 
 const totalClients = document.getElementById('clients-total')
@@ -48,10 +51,11 @@ function sendMessage() {
   if (messageInput.value === '') return;
 
   const formattedMessage = formatMessage(messageInput.value); // Format text before sending
+  const encryptedMessage = CryptoJS.AES.encrypt(formattedMessage, SECRET_KEY).toString(); // Encrypt after formatting
 
   const data = {
     name: username,
-    message: formattedMessage, // Use the formatted text
+    message: encryptedMessage, // Use the encrypted text
     dateTime: new Date()
   };
 
