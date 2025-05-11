@@ -119,11 +119,11 @@ const rooms = {
     users: [],
     messages: []
   },
-  general_2: {
+  general2: {
     users: [],
     messages: []
   },
-  general_3: {
+  general3: {
     users: [],
     messages: []
   }
@@ -139,12 +139,12 @@ function onConnected(socket) {
     name: session.user,
     id: socket.id,
     rooms: Object.keys(rooms).map(String),
-    currentRoom: Object.keys(rooms)[0].toString()
+    currentRoom: rooms[0]
   }
 
-  socket.join(user.currentRoom)
+  socket.join(rooms[0])
 
-  rooms[user.currentRoom].users.push(socket.id)
+  rooms['general'].users.push(socket.id)
   console.log(`User: ${user.name}, Socket ID: ${socket.id}`)
 
   console.log(user)
@@ -350,6 +350,17 @@ function checkNotAuthenticated(req, res, next) {
 }
 
 // Database Functions
+async function getDBRooms() {
+  try {
+    const result = await pool.query('SELECT * FROM rooms');
+    let rooms = result.rows.map(row => row.room_name);
+    console.log(rooms)
+    return rooms
+  } catch (err) {
+    console.error('Error loading rooms from database:', err);
+  }
+}
+
 async function addUserToRoom() {
   try {
     const result = await pool.query('SELECT * FROM rooms');
