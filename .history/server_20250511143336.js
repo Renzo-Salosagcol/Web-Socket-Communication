@@ -342,8 +342,10 @@ function checkNotAuthenticated(req, res, next) {
 async function getDBRooms() {
   try {
     const result = await pool.query('SELECT * FROM rooms');
+
     let rooms = result.rows.map(row => row.room_name);
     return rooms
+
   } catch (err) {
     console.error('Error loading rooms from database:', err);
   }
