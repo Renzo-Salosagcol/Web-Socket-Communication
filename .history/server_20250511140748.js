@@ -132,6 +132,7 @@ let rooms = (async () => {
 })();
 
 console.log(rooms)
+console.log(rooms.rows)
 
 io.on('connection', onConnected);
 
