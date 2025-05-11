@@ -212,22 +212,29 @@ function onConnected(socket) {
 
   // Function to log messages to a file
   async function logMessage(room, data) {
-  try {
-    await pool.query(
-      'INSERT INTO messages (room, name, message, timestamp) VALUES ($1, $2, $3, $4)',
-      [room, data.name, data.message, data.dateTime]
-    );
-  } catch (err) {
-    console.error('❌ Failed to log message to Neon DB:', err);
-  }}
+    try {
+      await pool.query(
+        'INSERT INTO messages (room, name, message, timestamp) VALUES ($1, $2, $3, $4)',
+        [room, data.name, data.message, data.dateTime]
+      );
+    } catch (err) {
+      console.error('❌ Failed to log message to Neon DB:', err);
+    }
+  }
 }
 
 // Authentication
 app.set('views', path.join(__dirname, 'views'));
 
+// app.get('/', checkAuthenticated, (req, res) => {
+//   res.render('index.ejs', { name: req.user.name, rooms: rooms });
+// });
+
 app.get('/', checkAuthenticated, (req, res) => {
-  res.render('index.ejs', { name: req.user.name, rooms: rooms });
+  console.log("Authenticated user:", req.user);
+  res.render('index.ejs', { name: req.user?.name, rooms: rooms });
 });
+
 
 // GET Login
 app.get('/login', checkNotAuthenticated, (req, res) => {
@@ -241,6 +248,8 @@ app.post('/login', checkNotAuthenticated, async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM users WHERE email = $1', [hashedEmail]);
     const user = result.rows[0];
+
+    console.log("Logging in user:", user);
 
     if (!user) {
       return res.redirect('/login');
