@@ -196,7 +196,6 @@ function onConnected(socket) {
         'INSERT INTO messages (room, name, message, dateTime) WHERE room_name = $1 VALUES ($2, $3, $4)',
         [room, data.name, data.message, data.dateTime]
       )
-      
       console.log(`Message added to room: ${room}`);
     } catch (err) {
       console.error('❌ Failed to log message to Neon DB:', err);
