@@ -193,7 +193,7 @@ function onConnected(socket) {
   async function addMessageToDB(room, data) {
     try {
       await pool.query(
-        'INSERT INTO messages (room, name, message, dateTime) WHERE room_name = $1 VALUES ($2, $3, $4)',
+        'INSERT INTO messages (room, name, message, dateTime) VALUES ($1, $2, $3, $4)',
         [room, data.name, data.message, data.dateTime]
       console.log(`Message added to room: ${room}`);
     } catch (err) {
