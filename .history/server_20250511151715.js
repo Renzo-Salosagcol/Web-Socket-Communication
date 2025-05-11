@@ -165,7 +165,7 @@ function onConnected(socket) {
       rooms[roomName].users.push(socket.id)
     }
 
-    socket.emit('joined-room', user.name, user.currentRoom, getRoomMessagesDB(user.currentRoom))
+    socket.emit('joined-room', user.name, user.currentRoom, rooms[user.currentRoom].messages)
   })
 
   socket.on('disconnect', () => {
