@@ -1,6 +1,6 @@
 const SECRET_KEY = "mySuperSecretKey123";
 
-const socket = io("wss://yap-sessions.onrender.com")
+const socket = io("wss://web-socket-communication.onrender.com")
 
 const totalClients = document.getElementById('clients-total')
 
@@ -165,7 +165,7 @@ function clearFeedback() {
 // Function to format text with basic Markdown-like syntax
 function formatMessage(text) {
   // Escape HTML tags before formatting
-  text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  text = text.replace(/<script/gi, '&lt;script').replace(/<\/script>/gi, '&lt;/script&gt;');
 
   // Format text using Markdown-like syntax
   text = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');    // **bold**
@@ -238,3 +238,30 @@ roomButtons.addEventListener('click', (e) => {
 function clearMessages() {
   messageContainer.innerHTML = '';
 }
+
+const uploadButton = document.getElementById('upload-button');
+const fileInput = document.getElementById('file-input');
+
+uploadButton.addEventListener('click', () => {
+  const file = fileInput.files[0];
+  if (!file) return alert("Please select a file first.");
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  fetch('/upload', {
+    method: 'POST',
+    body: formData
+  })
+    .then(res => res.json())
+    .then(data => {
+
+      const fileMessage = `<a href="/${data.filePath}" target="_blank">${file.name}</a>`;
+      messageInput.value = fileMessage;
+      document.getElementById('message-form').dispatchEvent(new Event('submit'));
+    })
+    .catch(err => {
+      console.error('Upload failed:', err);
+      alert("File upload failed.");
+    });
+});
