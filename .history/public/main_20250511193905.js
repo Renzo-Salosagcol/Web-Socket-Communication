@@ -62,7 +62,6 @@ function sendMessage() {
 
   console.log("Sending message:", data);
 
-  socket.emit('message', currentRoom, data)
   try {
     const decrypted = CryptoJS.AES.decrypt(data.message, SECRET_KEY).toString(CryptoJS.enc.Utf8);
     addMessageToUI(true, { ...data, message: decrypted }, false);
@@ -145,6 +144,12 @@ messageInput.addEventListener('blur', (e) => {
     feedback: ``
   })
 })
+
+function feedback() {
+  socket.emit('feedback', currentRoom, {
+    feedback: `${nameInput.value} is typing...`
+  })
+}
 
 socket.on('feedback', (data) => {
   clearFeedback()
