@@ -247,21 +247,24 @@ uploadButton.addEventListener('click', () => {
   if (!file) return alert("Please select a file first.");
 
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append("file", file);
+  formData.append("publicKey", "public_yRsEtGCcMzpfjwOAC/yZFWJ7Kgg=");
+  formData.append("fileName", file.name);
+  formData.append("folder", "/uploads"); // optional
 
-  fetch('/upload', {
-    method: 'POST',
+  fetch("https://upload.imagekit.io/api/v1/files/upload", {
+    method: "POST",
     body: formData
   })
     .then(res => res.json())
     .then(data => {
-
-      const fileMessage = `<a href="/${data.filePath}" target="_blank">${file.name}</a>`;
+      const fileMessage = `<a href="${data.url}" target="_blank">${file.name}</a>`;
       messageInput.value = fileMessage;
       document.getElementById('message-form').dispatchEvent(new Event('submit'));
     })
     .catch(err => {
-      console.error('Upload failed:', err);
+      console.error("Upload failed:", err);
       alert("File upload failed.");
     });
 });
+
