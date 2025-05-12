@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "id": "1746390896596",
+    "name": "renzo",
+    "email": "f660ab912ec121d1b1e928a0bb4bc61b15f5ad44d5efdc4e1c92a25e99b8e44a",
+    "password": "$2b$10$yjaGfBwpGnCJSLgtaJTHvuuqpzCIiK0armosFz1rw0gN5OZsexTua",
+    "failedAttempts": 0,
+    "lockUntil": null
+  }
+]

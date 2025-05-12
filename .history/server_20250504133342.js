@@ -1,10 +1,3 @@
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // Render already has this
-  ssl: { rejectUnauthorized: false }
-});
-
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
@@ -12,10 +5,10 @@ if (process.env.NODE_ENV !== 'production') {
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-// const https = require('https');
-const http = require('http');
+const https = require('https');
 const app = express();
 const PORT = process.env.PORT || 4000;
+const LOCAL_IP = process.env.LOCAL_IPV4; // Replace with your local IP address
 
 // ------------------------------------------------------------------
 
@@ -44,7 +37,13 @@ const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 30 * 60 * 1000; // 30 minutes
 // =============================================
 
-const db = require('./db');
+// Load users from JSON file
+const usersFile = path.join(__dirname, 'users.json');
+let users = [];
+
+if (fs.existsSync(usersFile)) {
+  users = JSON.parse(fs.readFileSync(usersFile));
+}
 
 // Hash Emails
 const crypto = require('crypto'); // For hashing emails securely
@@ -56,34 +55,22 @@ function hashEmail(email) {
 
 initializePassport(
   passport,
-  async email => {
-    const hashedEmail = hashEmail(email);
-    const result = await db.query('SELECT * FROM users WHERE email = $1', [hashedEmail]);
-    return result.rows[0];
-  },
-  async id => {
-    const result = await db.query('SELECT * FROM users WHERE id = $1', [id]);
-    return result.rows[0];
-  }
+  email => users.find(user => user.email === email),
+  id => users.find(user => user.id === id)
 );
 
-const server = http.createServer(app);
+const server = https.createServer({
+  key: fs.readFileSync(path.join(__dirname, 'certs/private.key')),
+  cert: fs.readFileSync(path.join(__dirname, 'certs/certificate.crt'))
+}, app);
 
 const io = require('socket.io')(server)
 
-// REUQUIRES SECRET KEY FOR SESSION
-/* const sessionMiddleware = session({
+const sessionMiddleware = session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-});*/
-
-const sessionMiddleware = session({
-  secret: process.env.SESSION_SECRET || 'fallback-secret',
-  resave: false,
-  saveUninitialized: false,
 });
-
 
 app.set('io', io)
 app.set('view-engine', 'ejs')
@@ -98,9 +85,7 @@ io.engine.use(sessionMiddleware);
 
 // ------------------------------------------------------------------
 
-// server.listen(PORT, LOCAL_IP, () => console.log(`Chat server running on https://${LOCAL_IP}:${PORT}`))
-server.listen(PORT, () => console.log(`Chat server running on port ${PORT}`));
-
+server.listen(PORT, LOCAL_IP, () => console.log(`Chat server running on https://${LOCAL_IP}:${PORT}`))
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -127,7 +112,6 @@ function onConnected(socket) {
   socket.join('general')
   rooms['general'].users.push(socket.id)
   console.log(`User: ${user.name}, Socket ID: ${socket.id}`)
-  io.emit('total-clients', rooms[user.currentRoom].users.length)
 
   session.user = user
 
@@ -149,7 +133,6 @@ function onConnected(socket) {
       rooms[roomName].users.push(socket.id)
     }
 
-    socket.to(user.currentRoom).emit('total-clients', rooms[user.currentRoom].users.length)
     socket.emit('joined-room', user.name, user.currentRoom, rooms[user.currentRoom].messages)
   })
 
@@ -173,11 +156,10 @@ function onConnected(socket) {
 
   socket.on('feedback', (room, data) => {
     if (room === user.currentRoom) {
-      io.to(user.currentRoom).emit('feedback', data)
+      socket.to(user.currentRoom).emit('feedback', data)
     }
   })
 
-  // Function to verify and update rooms
   function verifyRooms() {
     Object.keys(rooms).forEach(roomName => {
       const room = rooms[roomName]
@@ -204,20 +186,25 @@ function onConnected(socket) {
     }
   }
 
-  // Function to log messages to a file
-  async function logMessage(room, data) {
-    try {
-      await pool.query(
-        'INSERT INTO messages (room, name, message, timestamp) VALUES ($1, $2, $3, $4)',
-        [room, data.name, data.message, data.dateTime]
-      );
-    } catch (err) {
-      console.error('❌ Failed to log message to Neon DB:', err);
+  function logMessage(room, data) {
+    const logDir = path.join(__dirname, 'logs');
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir);
     }
+
+    const logFile = path.join(logDir, `${room}.txt`);
+    const logEntry = `${data.dateTime} - ${data.name}: ${data.message}\n`;
+
+    fs.appendFile(logFile, logEntry, (err) => {
+      if (err) {
+        console.error('Failed to write to log file:', err);
+      }
+    });
   }
 }
 
 // Authentication
+
 app.set('views', path.join(__dirname, 'views'));
 
 app.get('/', checkAuthenticated, (req, res) => {
@@ -232,59 +219,44 @@ app.get('/login', checkNotAuthenticated, (req, res) => {
 // POST Login
 app.post('/login', checkNotAuthenticated, async (req, res) => {
   const hashedEmail = hashEmail(req.body.email);
+  const user = users.find(user => user.email === hashedEmail);
+
+  if (!user) {
+    return res.redirect('/login');
+  }
+
+  const now = Date.now();
+
+  // Check if account is locked
+  if (user.lockUntil && user.lockUntil > now) {
+    return res.status(403).send('Account locked. Try again later.');
+  }
 
   try {
-    const result = await db.query('SELECT * FROM users WHERE email = $1', [hashedEmail]);
-    const user = result.rows[0];
-
-    if (!user) {
-      return res.redirect('/login');
-    }
-
-    const now = Date.now();
-
-    // Check if account is currently locked
-    if (user.lockuntil && Number(user.lockuntil) > now) {
-      return res.status(403).send('Account locked. Try again later.');
-    }
-
-    const match = await bcrypt.compare(req.body.password, user.password);
-
-    if (match) {
-      // Successful login: reset failedAttempts and lockUntil
-      await db.query(
-        'UPDATE users SET failedattempts = 0, lockuntil = NULL WHERE id = $1',
-        [user.id]
-      );
-
+    if (await bcrypt.compare(req.body.password, user.password)) {
+      user.failedAttempts = 0;
+      user.lockUntil = null; // Reset lockout
       req.login(user, err => {
         if (err) return res.status(500).send('Login error');
         res.redirect('/');
       });
-
     } else {
-      // Failed login: increment failedAttempts
-      const attempts = (user.failedattempts || 0) + 1;
-      const lockUntil = attempts >= MAX_ATTEMPTS ? now + LOCKOUT_DURATION : null;
+      user.failedAttempts = (user.failedAttempts || 0) + 1;
 
-      await db.query(
-        'UPDATE users SET failedattempts = $1, lockuntil = $2 WHERE id = $3',
-        [attempts, lockUntil, user.id]
-      );
-
-      if (lockUntil) {
+      if (user.failedAttempts >= MAX_ATTEMPTS) {
+        user.lockUntil = now + LOCKOUT_DURATION;
         return res.status(403).send('Too many attempts. Account locked for 30 minutes.');
       }
 
       res.redirect('/login');
     }
-  } catch (err) {
-    console.error(err);
+  } catch {
     res.redirect('/login');
   }
+
+  // Save updated users
+  fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
 });
-
-
 // GET Register
 app.get('/register', checkNotAuthenticated, (req, res) => {
   res.render('register.ejs');
@@ -294,19 +266,26 @@ app.get('/register', checkNotAuthenticated, (req, res) => {
 app.post('/register', checkNotAuthenticated, async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    const hashedEmail = hashEmail(req.body.email);
+    const hashedEmail = hashEmail(req.body.email); // Hash the email
 
-    await db.query(
-      'INSERT INTO users (name, email, password) VALUES ($1, $2, $3)',
-      [req.body.name, hashedEmail, hashedPassword]
-    );
+    const newUser = {
+      id: Date.now().toString(),
+      name: req.body.name,
+      email: hashedEmail, // Store the hashed email
+      password: hashedPassword
+    };
+
+    users.push(newUser);
+
+    // Save updated users array to JSON file
+    fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
 
     res.redirect('/login');
-  } catch (err) {
-    console.error(err);
+  } catch {
     res.redirect('/register');
   }
 });
+
 
 // Logout
 app.delete('/logout', (req, res, next) => {
