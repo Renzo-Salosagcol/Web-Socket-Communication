@@ -168,7 +168,7 @@ function onConnected(socket) {
     if (room === user.currentRoom) {
       console.log(data)
       rooms[user.currentRoom].messages.push(data)
-      io.to(user.currentRoom).emit('chat-message', { ...data, room: user.currentRoom })
+      socket.to(user.currentRoom).emit('chat-message', { ...data, room: user.currentRoom })
       // logMessage(user.currentRoom, data); // Log the message
       console.log(rooms[user.currentRoom].messages)
     }
@@ -176,7 +176,7 @@ function onConnected(socket) {
 
   socket.on('feedback', (room, data) => {
     if (room === user.currentRoom) {
-      io.to(user.currentRoom).emit('feedback', data)
+      socket.to(user.currentRoom).emit('feedback', data)
     }
   })
 
