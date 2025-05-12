@@ -337,26 +337,26 @@ async function addUserToRoom() {
 }
 
 async function addMessageToDB(room, data) {
-  app.post('/', async (req, res) => {
-    const { name, message, dateTime } = data;
-    const room = room;
+    app.post('/', async (req, res) => {
+      const { name, message, dateTime } = data;
+      const room = room;
 
-    if (!name || !message || !dateTime) {
-      return res.status(400).send('Missing required fields');
-    }
+      if (!name || !message || !dateTime) {
+        return res.status(400).send('Missing required fields');
+      }
 
-    try {
-      await db.query(
-        'INSERT INTO messages (timeStamp, name, message, room) VALUES ($1, $2, $3, $4)',
-        [data.dateTime, data.name, data.message, room]
-      );
-      console.log(`Message added to room: ${room}`);
-      res.status(200).send('Message logged successfully');
-    } catch (err) {
-      console.error('❌ Failed to log message to Neon DB:', err);
-      res.status(500).send('Failed to log message');
-    }
-  })
-}
+      try {
+        await db.query(
+          'INSERT INTO messages (timeStamp, name, message, room) VALUES ($1, $2, $3, $4)',
+          [data.dateTime, data.name, data.message, room]
+        );
+        console.log(`Message added to room: ${room}`);
+        res.status(200).send('Message logged successfully');
+      } catch (err) {
+        console.error('❌ Failed to log message to Neon DB:', err);
+        res.status(500).send('Failed to log message');
+      }
+    })
+  }
 
 app.listen(3000);

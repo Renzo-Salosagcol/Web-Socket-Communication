@@ -196,6 +196,29 @@ function onConnected(socket) {
   //       'INSERT INTO users (name, email, password) VALUES ($1, $2, $3)',
 
   // Database Functions for Message Logging
+  async function addMessageToDB(room, data) {
+    app.post('/', async (req, res) => {
+      const { name, message, dateTime } = data;
+      const room = room;
+
+      if (!name || !message || !dateTime) {
+        return res.status(400).send('Missing required fields');
+      }
+
+      try {
+        await db.query(
+          'INSERT INTO messages (timeStamp, name, message, room) VALUES ($1, $2, $3, $4)',
+          [data.dateTime, data.name, data.message, room]
+        );
+        console.log(`Message added to room: ${room}`);
+        res.status(200).send('Message logged successfully');
+      } catch (err) {
+        console.error('❌ Failed to log message to Neon DB:', err);
+        res.status(500).send('Failed to log message');
+      }
+    })
+  }
+
   async function getRoomMessagesDB(room) {
     try {
       const result = await pool.query('SELECT * FROM messages WHERE room = $1', [room]);
@@ -334,29 +357,6 @@ async function addUserToRoom() {
   } catch (err) {
     console.error('Error loading rooms from database:', err);
   }
-}
-
-async function addMessageToDB(room, data) {
-  app.post('/', async (req, res) => {
-    const { name, message, dateTime } = data;
-    const room = room;
-
-    if (!name || !message || !dateTime) {
-      return res.status(400).send('Missing required fields');
-    }
-
-    try {
-      await db.query(
-        'INSERT INTO messages (timeStamp, name, message, room) VALUES ($1, $2, $3, $4)',
-        [data.dateTime, data.name, data.message, room]
-      );
-      console.log(`Message added to room: ${room}`);
-      res.status(200).send('Message logged successfully');
-    } catch (err) {
-      console.error('❌ Failed to log message to Neon DB:', err);
-      res.status(500).send('Failed to log message');
-    }
-  })
 }
 
 app.listen(3000);
