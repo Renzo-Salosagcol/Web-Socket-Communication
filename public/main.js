@@ -165,7 +165,7 @@ function clearFeedback() {
 // Function to format text with basic Markdown-like syntax
 function formatMessage(text) {
   // Escape HTML tags before formatting
-  text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  text = text.replace(/<script/gi, '&lt;script').replace(/<\/script>/gi, '&lt;/script&gt;');
 
   // Format text using Markdown-like syntax
   text = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');    // **bold**
@@ -255,7 +255,8 @@ uploadButton.addEventListener('click', () => {
   })
     .then(res => res.json())
     .then(data => {
-      const fileMessage = `[${file.name}](/${data.filePath})`;
+
+      const fileMessage = `<a href="/${data.filePath}" target="_blank">${file.name}</a>`;
       messageInput.value = fileMessage;
       document.getElementById('message-form').dispatchEvent(new Event('submit'));
     })

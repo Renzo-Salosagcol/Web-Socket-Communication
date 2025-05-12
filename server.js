@@ -318,7 +318,11 @@ app.post('/upload', upload.single('file'), (req, res) => {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
-  const filePath = `uploads/${req.file.filename}`;
+  const ext = path.extname(req.file.originalname);
+  const fileName = `${req.file.filename}${ext}`;
+  fs.renameSync(req.file.path, path.join(__dirname, 'public/uploads', fileName));
+  const filePath = `uploads/${fileName}`;
+
   res.json({ filePath });
 });
 
