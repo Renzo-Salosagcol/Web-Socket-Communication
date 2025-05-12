@@ -132,7 +132,6 @@ function onConnected(socket) {
   socket.join('general')
   rooms['general'].users.push(socket.id)
   console.log(`User: ${user.name}, Socket ID: ${socket.id}`)
-  io.emit('total-clients', rooms[user.currentRoom].users.length)
 
   session.user = user
 
@@ -154,7 +153,6 @@ function onConnected(socket) {
       rooms[roomName].users.push(socket.id)
     }
 
-    socket.to(user.currentRoom).emit('total-clients', rooms[user.currentRoom].users.length)
     socket.emit('joined-room', user.name, user.currentRoom, rooms[user.currentRoom].messages)
   })
 
@@ -170,15 +168,15 @@ function onConnected(socket) {
     if (room === user.currentRoom) {
       console.log(data)
       rooms[user.currentRoom].messages.push(data)
-      socket.to(user.currentRoom).emit('chat-message', { ...data, room: user.currentRoom })
-      logMessage(user.currentRoom, data); // Log the message
+      io.to(user.currentRoom).emit('chat-message', { ...data, room: user.currentRoom })
+      // logMessage(user.currentRoom, data); // Log the message
       console.log(rooms[user.currentRoom].messages)
     }
   })
 
   socket.on('feedback', (room, data) => {
     if (room === user.currentRoom) {
-      io.to(user.currentRoom).broadcast('feedback', data)
+      io.to(user.currentRoom).emit('feedback', data)
     }
   })
 

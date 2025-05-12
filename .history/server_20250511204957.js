@@ -178,7 +178,7 @@ function onConnected(socket) {
 
   socket.on('feedback', (room, data) => {
     if (room === user.currentRoom) {
-      io.to(user.currentRoom).broadcast('feedback', data)
+      io.to(user.currentRoom).emit('feedback', data)
     }
   })
 

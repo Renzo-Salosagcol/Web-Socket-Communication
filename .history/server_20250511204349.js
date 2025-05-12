@@ -132,7 +132,7 @@ function onConnected(socket) {
   socket.join('general')
   rooms['general'].users.push(socket.id)
   console.log(`User: ${user.name}, Socket ID: ${socket.id}`)
-  io.emit('total-clients', rooms[user.currentRoom].users.length)
+  io.to(user.currentRoom).emit('total-clients', rooms[user.currentRoom].users.length)
 
   session.user = user
 
@@ -178,7 +178,7 @@ function onConnected(socket) {
 
   socket.on('feedback', (room, data) => {
     if (room === user.currentRoom) {
-      io.to(user.currentRoom).broadcast('feedback', data)
+      io.to(user.currentRoom).emit('feedback', data)
     }
   })
 
