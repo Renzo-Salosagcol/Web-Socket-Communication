@@ -214,15 +214,9 @@ app.get('/', checkAuthenticated, (req, res) => {
 });
 
 app.post('/', checkAuthenticated, (req, res) => {
-  try {
-    console.log('Adding message to DB');
-    await db.query(
-      'INSERT INTO messages (timeStamp, name, message, room) VALUES ($1, $2, $3, $4)',
-      [data.dateTime, data.name, data.message, room]
-    );
-    console.log(`Message added to room: ${room}`);
-  } catch (err) {
-    console.error('❌ Failed to log message to Neon DB:', err);
+  const roomName = req.body.roomName;
+  if (roomName && !rooms[roomName]) {
+    rooms[roomName] = { users: [], messages: [] };
   }
   res.redirect('/');
 });
