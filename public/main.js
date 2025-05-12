@@ -1,6 +1,6 @@
 const SECRET_KEY = "mySuperSecretKey123";
 
-const socket = io("wss://web-socket-communication.onrender.com")
+const socket = io("wss://yap-sessions-egmc.onrender.com/")
 
 const totalClients = document.getElementById('clients-total')
 
