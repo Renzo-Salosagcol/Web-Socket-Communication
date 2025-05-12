@@ -43,10 +43,10 @@ const rateLimitedMessage = rateLimit(sendMessage, 10000, 3)
 let callCount = 0
 
 logoutForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  socket.emit('disconnect', username);
-  window.location.href = '/login';
-});
+  e.preventDefault()
+  socket.emit('disconnect', username)
+  windows.location.href = '/login'
+})
 
 messageForm.addEventListener('submit', (e) => {
   e.preventDefault()
