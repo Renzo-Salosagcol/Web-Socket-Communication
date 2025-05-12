@@ -154,7 +154,6 @@ function onConnected(socket) {
       rooms[roomName].users.push(socket.id)
     }
 
-    socket.to(user.currentRoom).emit('total-clients', rooms[user.currentRoom].users.length)
     socket.emit('joined-room', user.name, user.currentRoom, rooms[user.currentRoom].messages)
   })
 
