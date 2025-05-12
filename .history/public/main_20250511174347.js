@@ -219,7 +219,7 @@ socket.on('joined-room', (userName, room, messages) => {
   currentRoom = room
   messages.forEach((message) => {
     message.message = CryptoJS.AES.decrypt(message.message, SECRET_KEY).toString(CryptoJS.enc.Utf8);
-
+    
     if (message.name === userName) {
       addMessageToUI(true, message, true)
     } else {

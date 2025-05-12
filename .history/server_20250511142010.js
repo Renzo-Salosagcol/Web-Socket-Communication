@@ -114,38 +114,45 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 let usersConnected = new Set()
 
-const rooms = {
-  general: {
-    users: [],
-    messages: []
-  },
-  general_2: {
-    users: [],
-    messages: []
-  },
-  general_3: {
-    users: [],
-    messages: []
+let rooms = (async () => {
+  try {
+    const result = await pool.query('SELECT * FROM rooms');
+    const rooms = result.rows.reduce((acc, row) => {
+      acc[row.room_name] = {
+        users: row.users || [], // Ensure users is an array
+        messages: row.messages || [] // Ensure messages is an array
+      };
+      return acc[row.room_name];
+    }, {});
+
+
+
+    return rooms
+
+  } catch (err) {
+    console.error('Error loading rooms from database:', err);
   }
-}
+})();
+
+console.log(rooms)
 
 io.on('connection', onConnected);
 
 function onConnected(socket) {
   const session = socket.request.session;
-  console.log("Session Information: ", session)
 
   const user = {
     name: session.user,
     id: socket.id,
     rooms: Object.keys(rooms).map(String),
-    currentRoom: Object.keys(rooms)[0].toString()
+    currentRoom: 'general'
   }
 
-  socket.join(user.currentRoom)
-
-  rooms[user.currentRoom].users.push(socket.id)
+  socket.join('general')
+  rooms['general'].users.push(socket.id)
   console.log(`User: ${user.name}, Socket ID: ${socket.id}`)
+
+  session.user = user
 
   console.log(user)
   usersConnected.add(user)
@@ -165,7 +172,7 @@ function onConnected(socket) {
       rooms[roomName].users.push(socket.id)
     }
 
-    socket.emit('joined-room', user.name, user.currentRoom, getRoomMessagesDB(user.currentRoom))
+    socket.emit('joined-room', user.name, user.currentRoom, rooms[user.currentRoom].messages)
   })
 
   socket.on('disconnect', () => {
@@ -178,8 +185,11 @@ function onConnected(socket) {
 
   socket.on('message', (room, data) => {
     if (room === user.currentRoom) {
-      addMessageToDB(user.currentRoom, data)
+      console.log(data)
+      rooms[user.currentRoom].messages.push(data)
       socket.to(user.currentRoom).emit('chat-message', { ...data, room: user.currentRoom })
+      logMessage(user.currentRoom, data); // Log the message
+      console.log(rooms[user.currentRoom].messages)
     }
   })
 
@@ -189,60 +199,50 @@ function onConnected(socket) {
     }
   })
 
-  // Database Functions for User Management
-  // async function addUserToDB(user) {
-  //   try {
-  //     await pool.query(
-  //       'INSERT INTO users (name, email, password) VALUES ($1, $2, $3)',
+  // Function to verify and update rooms
+  function verifyRooms() {
+    Object.keys(rooms).forEach(roomName => {
+      const room = rooms[roomName]
+      if (room.users.includes(socket.id)) {
+        room.users = room.users.filter((user) => user !== socket.id)
+      }
 
-  // Database Functions for Message Logging
-  async function getRoomMessagesDB(room) {
-    try {
-      const result = await pool.query('SELECT * FROM messages WHERE room = $1', [room]);
-      return result.rows;
-    } catch (err) {
-      console.error('❌ Failed to retrieve messages from Neon DB:', err);
+      if (roomName.includes(socket.id)) {
+        user.rooms.push(roomName)
+      }
+    })
+
+    if (usersConnected.size > 1) {
+      usersConnected.forEach((user) => {
+        if (user.id !== socket.id) {
+          const privateRoom = [user.id, socket.id].sort().join('-')
+          rooms[privateRoom] = { users: [user.id, socket.id], messages: [] }
+
+          if (!user.rooms.includes(privateRoom)) {
+            user.rooms.push(privateRoom)
+          }
+        }
+      })
     }
   }
 
   // Function to log messages to a file
   async function logMessage(room, data) {
-    try {
-      await pool.query(
-        'INSERT INTO messages (room, name, message, timestamp) VALUES ($1, $2, $3, $4)',
-        [room, data.name, data.message, data.dateTime]
-      );
-    } catch (err) {
-      console.error('❌ Failed to log message to Neon DB:', err);
-    }
-  }
-
+  try {
+    await pool.query(
+      'INSERT INTO messages (room, name, message, timestamp) VALUES ($1, $2, $3, $4)',
+      [room, data.name, data.message, data.dateTime]
+    );
+  } catch (err) {
+    console.error('❌ Failed to log message to Neon DB:', err);
+  }}
 }
 
 // Authentication
 app.set('views', path.join(__dirname, 'views'));
 
-// app.get('/', checkAuthenticated, (req, res) => {
-//   res.render('index.ejs', { name: req.user.name, rooms: rooms });
-// });
-
 app.get('/', checkAuthenticated, (req, res) => {
-  console.log("Authenticated user:", req.user);
-  res.render('index.ejs', { name: req.user?.name, rooms: rooms });
-});
-
-app.post('/', checkAuthenticated, (req, res) => {
-  try {
-    console.log('Adding message to DB');
-    await db.query(
-      'INSERT INTO messages (timeStamp, name, message, room) VALUES ($1, $2, $3, $4)',
-      [data.dateTime, data.name, data.message, room]
-    );
-    console.log(`Message added to room: ${room}`);
-  } catch (err) {
-    console.error('❌ Failed to log message to Neon DB:', err);
-  }
-  res.redirect('/');
+  res.render('index.ejs', { name: req.user.name, rooms: rooms });
 });
 
 // GET Login
@@ -257,8 +257,6 @@ app.post('/login', checkNotAuthenticated, async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM users WHERE email = $1', [hashedEmail]);
     const user = result.rows[0];
-
-    console.log("Logging in user:", user);
 
     if (!user) {
       return res.redirect('/login');
@@ -358,16 +356,9 @@ function checkNotAuthenticated(req, res, next) {
   next()
 }
 
-// Database Functions
-async function addUserToRoom() {
-  try {
-    const result = await pool.query('SELECT * FROM rooms');
-    let rooms = result.rows.map(row => row.room_name);
-    console.log(rooms)
-    return rooms
-  } catch (err) {
-    console.error('Error loading rooms from database:', err);
-  }
+// Database
+async function dbQuery(query) {
+  return await db.query(query)
 }
 
 app.listen(3000);

@@ -165,7 +165,7 @@ function onConnected(socket) {
       rooms[roomName].users.push(socket.id)
     }
 
-    socket.emit('joined-room', user.name, user.currentRoom, getRoomMessagesDB(user.currentRoom))
+    socket.emit('joined-room', user.name, user.currentRoom, rooms[user.currentRoom].messages)
   })
 
   socket.on('disconnect', () => {
@@ -178,8 +178,11 @@ function onConnected(socket) {
 
   socket.on('message', (room, data) => {
     if (room === user.currentRoom) {
-      addMessageToDB(user.currentRoom, data)
+      console.log(data)
+      rooms[user.currentRoom].messages.push(data)
       socket.to(user.currentRoom).emit('chat-message', { ...data, room: user.currentRoom })
+      logMessage(user.currentRoom, data); // Log the message
+      console.log(rooms[user.currentRoom].messages)
     }
   })
 
@@ -189,14 +192,19 @@ function onConnected(socket) {
     }
   })
 
-  // Database Functions for User Management
-  // async function addUserToDB(user) {
-  //   try {
-  //     await pool.query(
-  //       'INSERT INTO users (name, email, password) VALUES ($1, $2, $3)',
-
   // Database Functions for Message Logging
-  async function getRoomMessagesDB(room) {
+  async function addMessage(room, data) {
+    try {
+      await pool.query(
+        'UPDATE rooms SET messages = array_append(messages, $1) WHERE room_name = $2',
+        [data, room]
+      );
+      console.log(`Message added to room: ${room}`);
+    } catch (err) {
+      console.error('❌ Failed to log message to Neon DB:', err);
+    }
+  }
+  async function getMessages(room) {
     try {
       const result = await pool.query('SELECT * FROM messages WHERE room = $1', [room]);
       return result.rows;
@@ -204,45 +212,13 @@ function onConnected(socket) {
       console.error('❌ Failed to retrieve messages from Neon DB:', err);
     }
   }
-
-  // Function to log messages to a file
-  async function logMessage(room, data) {
-    try {
-      await pool.query(
-        'INSERT INTO messages (room, name, message, timestamp) VALUES ($1, $2, $3, $4)',
-        [room, data.name, data.message, data.dateTime]
-      );
-    } catch (err) {
-      console.error('❌ Failed to log message to Neon DB:', err);
-    }
-  }
-
 }
 
 // Authentication
 app.set('views', path.join(__dirname, 'views'));
 
-// app.get('/', checkAuthenticated, (req, res) => {
-//   res.render('index.ejs', { name: req.user.name, rooms: rooms });
-// });
-
 app.get('/', checkAuthenticated, (req, res) => {
-  console.log("Authenticated user:", req.user);
-  res.render('index.ejs', { name: req.user?.name, rooms: rooms });
-});
-
-app.post('/', checkAuthenticated, (req, res) => {
-  try {
-    console.log('Adding message to DB');
-    await db.query(
-      'INSERT INTO messages (timeStamp, name, message, room) VALUES ($1, $2, $3, $4)',
-      [data.dateTime, data.name, data.message, room]
-    );
-    console.log(`Message added to room: ${room}`);
-  } catch (err) {
-    console.error('❌ Failed to log message to Neon DB:', err);
-  }
-  res.redirect('/');
+  res.render('index.ejs', { name: req.user.name, rooms: rooms });
 });
 
 // GET Login
@@ -257,8 +233,6 @@ app.post('/login', checkNotAuthenticated, async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM users WHERE email = $1', [hashedEmail]);
     const user = result.rows[0];
-
-    console.log("Logging in user:", user);
 
     if (!user) {
       return res.redirect('/login');
