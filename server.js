@@ -231,20 +231,6 @@ app.get('/', checkAuthenticated, (req, res) => {
   res.render('index.ejs', { name: req.user?.name, rooms: rooms });
 });
 
-app.post('/', checkAuthenticated, (req, res) => {
-  try {
-    console.log('Adding message to DB');
-    await db.query(
-      'INSERT INTO messages (timeStamp, name, message, room) VALUES ($1, $2, $3, $4)',
-      [data.dateTime, data.name, data.message, room]
-    );
-    console.log(`Message added to room: ${room}`);
-  } catch (err) {
-    console.error('❌ Failed to log message to Neon DB:', err);
-  }
-  res.redirect('/');
-});
-
 // GET Login
 app.get('/login', checkNotAuthenticated, (req, res) => {
   res.render('login.ejs');
