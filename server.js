@@ -27,6 +27,9 @@ const methodOverride = require('method-override');
 
 const initializePassport = require('./passport-config');
 
+const multer = require('multer');  // required for upload
+const upload = multer({ dest: path.join(__dirname, 'public/uploads/') }); // required for upload
+
 // =============== Rate Limiting ===============
 const rateLimit = require('express-rate-limit');
 
@@ -309,6 +312,16 @@ app.post('/register', checkNotAuthenticated, async (req, res) => {
     res.redirect('/register');
   }
 });
+
+app.post('/upload', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  const filePath = `uploads/${req.file.filename}`;
+  res.json({ filePath });
+});
+
 
 // Logout
 app.delete('/logout', (req, res, next) => {
