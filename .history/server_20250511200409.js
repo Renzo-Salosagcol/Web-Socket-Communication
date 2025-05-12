@@ -169,7 +169,7 @@ function onConnected(socket) {
       console.log(data)
       rooms[user.currentRoom].messages.push(data)
       socket.to(user.currentRoom).emit('chat-message', { ...data, room: user.currentRoom })
-      logMessage(user.currentRoom, data); // Log the message
+      // logMessage(user.currentRoom, data); // Log the message
       console.log(rooms[user.currentRoom].messages)
     }
   })
