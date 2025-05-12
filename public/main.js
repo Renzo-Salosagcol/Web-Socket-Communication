@@ -250,13 +250,12 @@ uploadButton.addEventListener('click', () => {
   formData.append("file", file);
   formData.append("fileName", file.name);
   formData.append("folder", "/uploads"); // optional
+  formData.append("publicKey", "public_yRsEtGCcMzpfjwOAC/yZFWJ7Kgg=");
+
 
   fetch("https://upload.imagekit.io/api/v1/files/upload", {
-    method: "POST",
-    headers: {
-      Authorization: "Basic " + btoa("public_yRsEtGCcMzpfjwOAC/yZFWJ7Kgg:")
-    },
-    body: formData
+  method: "POST",
+  body: formData
   })
     .then(res => res.json())
     .then(data => {
