@@ -67,6 +67,11 @@ initializePassport(
   }
 );
 
+// Render does not work with https certificates
+/*const server = https.createServer({
+  key: fs.readFileSync(path.join(__dirname, 'certs/private.key')),
+  cert: fs.readFileSync(path.join(__dirname, 'certs/certificate.crt'))
+}, app);*/
 const server = http.createServer(app);
 
 const io = require('socket.io')(server)
@@ -127,7 +132,6 @@ function onConnected(socket) {
   socket.join('general')
   rooms['general'].users.push(socket.id)
   console.log(`User: ${user.name}, Socket ID: ${socket.id}`)
-  io.emit('total-clients', rooms[user.currentRoom].users.length)
 
   session.user = user
 
@@ -149,7 +153,6 @@ function onConnected(socket) {
       rooms[roomName].users.push(socket.id)
     }
 
-    socket.to(user.currentRoom).emit('total-clients', rooms[user.currentRoom].users.length)
     socket.emit('joined-room', user.name, user.currentRoom, rooms[user.currentRoom].messages)
   })
 
@@ -165,15 +168,15 @@ function onConnected(socket) {
     if (room === user.currentRoom) {
       console.log(data)
       rooms[user.currentRoom].messages.push(data)
-      socket.to(user.currentRoom).emit('chat-message', { ...data, room: user.currentRoom })
-      logMessage(user.currentRoom, data); // Log the message
+      io.to(user.currentRoom).emit('chat-message', { ...data, room: user.currentRoom })
+      // logMessage(user.currentRoom, data); // Log the message
       console.log(rooms[user.currentRoom].messages)
     }
   })
 
   socket.on('feedback', (room, data) => {
     if (room === user.currentRoom) {
-      io.to(user.currentRoom).emit('feedback', data)
+      socket.to(user.currentRoom).emit('feedback', data)
     }
   })
 
@@ -206,15 +209,14 @@ function onConnected(socket) {
 
   // Function to log messages to a file
   async function logMessage(room, data) {
-    try {
-      await pool.query(
-        'INSERT INTO messages (room, name, message, timestamp) VALUES ($1, $2, $3, $4)',
-        [room, data.name, data.message, data.dateTime]
-      );
-    } catch (err) {
-      console.error('❌ Failed to log message to Neon DB:', err);
-    }
-  }
+  try {
+    await pool.query(
+      'INSERT INTO messages (room, name, message, timestamp) VALUES ($1, $2, $3, $4)',
+      [room, data.name, data.message, data.dateTime]
+    );
+  } catch (err) {
+    console.error('❌ Failed to log message to Neon DB:', err);
+  }}
 }
 
 // Authentication

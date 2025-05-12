@@ -67,9 +67,17 @@ initializePassport(
   }
 );
 
+// Render does not work with https certificates
+/*const server = https.createServer({
+  key: fs.readFileSync(path.join(__dirname, 'certs/private.key')),
+  cert: fs.readFileSync(path.join(__dirname, 'certs/certificate.crt'))
+}, app);*/
 const server = http.createServer(app);
 
-const io = require('socket.io')(server)
+const io = require('socket.io')(server, {
+  pingInterval: 10000, // how often to ping/pong.
+  pingTimeout: 30000 // time after which the connection is considered timed-out.
+})
 
 // REUQUIRES SECRET KEY FOR SESSION
 /* const sessionMiddleware = session({
@@ -106,11 +114,24 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 let usersConnected = new Set()
 
-const rooms = {
-  general: { users: [], messages: [] },
-  general2: { users: [], messages: [] },
-  general3: { users: [], messages: [] },
-}
+let rooms = (async () => {
+  try {
+    const result = await pool.query('SELECT * FROM rooms');
+    const rooms = result.rows.reduce((acc, row) => {
+      acc[row.room_name] = {
+        users: row.users || [], // Ensure users is an array
+        messages: row.messages || [] // Ensure messages is an array
+      };
+      return acc;
+    }, {});
+
+    console.log('Rooms loaded from database:', rooms);
+  } catch (err) {
+    console.error('Error loading rooms from database:', err);
+  }
+})();
+
+console.log(rooms)
 
 io.on('connection', onConnected);
 
@@ -127,7 +148,6 @@ function onConnected(socket) {
   socket.join('general')
   rooms['general'].users.push(socket.id)
   console.log(`User: ${user.name}, Socket ID: ${socket.id}`)
-  io.emit('total-clients', rooms[user.currentRoom].users.length)
 
   session.user = user
 
@@ -149,7 +169,6 @@ function onConnected(socket) {
       rooms[roomName].users.push(socket.id)
     }
 
-    socket.to(user.currentRoom).emit('total-clients', rooms[user.currentRoom].users.length)
     socket.emit('joined-room', user.name, user.currentRoom, rooms[user.currentRoom].messages)
   })
 
@@ -173,7 +192,7 @@ function onConnected(socket) {
 
   socket.on('feedback', (room, data) => {
     if (room === user.currentRoom) {
-      io.to(user.currentRoom).emit('feedback', data)
+      socket.to(user.currentRoom).broadcast('feedback', data)
     }
   })
 
@@ -206,15 +225,14 @@ function onConnected(socket) {
 
   // Function to log messages to a file
   async function logMessage(room, data) {
-    try {
-      await pool.query(
-        'INSERT INTO messages (room, name, message, timestamp) VALUES ($1, $2, $3, $4)',
-        [room, data.name, data.message, data.dateTime]
-      );
-    } catch (err) {
-      console.error('❌ Failed to log message to Neon DB:', err);
-    }
-  }
+  try {
+    await pool.query(
+      'INSERT INTO messages (room, name, message, timestamp) VALUES ($1, $2, $3, $4)',
+      [room, data.name, data.message, data.dateTime]
+    );
+  } catch (err) {
+    console.error('❌ Failed to log message to Neon DB:', err);
+  }}
 }
 
 // Authentication
@@ -333,6 +351,11 @@ function checkNotAuthenticated(req, res, next) {
     return res.redirect('/')
   }
   next()
+}
+
+// Database
+async function dbQuery(query) {
+  return await db.query(query)
 }
 
 app.listen(3000);

@@ -1,3 +1,5 @@
+// const socket = io("wss://192.168.12.134:4000") // Replace with your local IP address
+
 const SECRET_KEY = "mySuperSecretKey123";
 
 const socket = io("wss://yap-sessions.onrender.com")
@@ -7,7 +9,6 @@ const totalClients = document.getElementById('clients-total')
 const messageContainer = document.getElementById('message-container')
 //const nameInput = document.getElementById('name-input')
 const username = document.getElementById('name-input').value;
-const nameInput = username
 const messageForm = document.getElementById('message-form')
 const messageInput = document.getElementById('message-input')
 
@@ -58,9 +59,6 @@ function sendMessage() {
     dateTime: new Date()
   };
 
-  console.log("Sending message:", data);
-
-  socket.emit('message', currentRoom, data)
   try {
     const decrypted = CryptoJS.AES.decrypt(data.message, SECRET_KEY).toString(CryptoJS.enc.Utf8);
     addMessageToUI(true, { ...data, message: decrypted }, false);
@@ -126,20 +124,20 @@ function scrollToBottom() {
 }
 
 messageInput.addEventListener('focus', (e) => {
-  socket.emit('feedback', currentRoom, {
-    feedback: `${username} is typing...`
+  socket.broadcast('feedback', currentRoom, {
+    feedback: `${nameInput.value} is typing...`
   })
 })
 
 messageInput.addEventListener('keypress', (e) => {
   clearFeedback()
-  socket.emit('feedback', currentRoom, {
-    feedback: `${username} is typing...`
+  socket.broadcast('feedback', currentRoom, {
+    feedback: `${nameInput.value} is typing...`
   })
 })
 
 messageInput.addEventListener('blur', (e) => {
-  socket.emit('feedback', currentRoom, {
+  socket.broadcast('feedback', currentRoom, {
     feedback: ``
   })
 })
@@ -215,7 +213,7 @@ socket.on('joined-room', (userName, room, messages) => {
   currentRoom = room
   messages.forEach((message) => {
     message.message = CryptoJS.AES.decrypt(message.message, SECRET_KEY).toString(CryptoJS.enc.Utf8);
-
+    
     if (message.name === userName) {
       addMessageToUI(true, message, true)
     } else {

@@ -1,3 +1,5 @@
+// const socket = io("wss://192.168.12.134:4000") // Replace with your local IP address
+
 const SECRET_KEY = "mySuperSecretKey123";
 
 const socket = io("wss://yap-sessions.onrender.com")
@@ -127,14 +129,14 @@ function scrollToBottom() {
 
 messageInput.addEventListener('focus', (e) => {
   socket.emit('feedback', currentRoom, {
-    feedback: `${username} is typing...`
+    feedback: `${nameInput.value} is typing...`
   })
 })
 
 messageInput.addEventListener('keypress', (e) => {
   clearFeedback()
   socket.emit('feedback', currentRoom, {
-    feedback: `${username} is typing...`
+    feedback: `${nameInput.value} is typing...`
   })
 })
 

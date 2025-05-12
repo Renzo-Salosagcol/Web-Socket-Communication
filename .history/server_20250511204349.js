@@ -67,6 +67,11 @@ initializePassport(
   }
 );
 
+// Render does not work with https certificates
+/*const server = https.createServer({
+  key: fs.readFileSync(path.join(__dirname, 'certs/private.key')),
+  cert: fs.readFileSync(path.join(__dirname, 'certs/certificate.crt'))
+}, app);*/
 const server = http.createServer(app);
 
 const io = require('socket.io')(server)
@@ -127,7 +132,7 @@ function onConnected(socket) {
   socket.join('general')
   rooms['general'].users.push(socket.id)
   console.log(`User: ${user.name}, Socket ID: ${socket.id}`)
-  io.emit('total-clients', rooms[user.currentRoom].users.length)
+  io.to(user.currentRoom).emit('total-clients', rooms[user.currentRoom].users.length)
 
   session.user = user
 
@@ -206,15 +211,14 @@ function onConnected(socket) {
 
   // Function to log messages to a file
   async function logMessage(room, data) {
-    try {
-      await pool.query(
-        'INSERT INTO messages (room, name, message, timestamp) VALUES ($1, $2, $3, $4)',
-        [room, data.name, data.message, data.dateTime]
-      );
-    } catch (err) {
-      console.error('❌ Failed to log message to Neon DB:', err);
-    }
-  }
+  try {
+    await pool.query(
+      'INSERT INTO messages (room, name, message, timestamp) VALUES ($1, $2, $3, $4)',
+      [room, data.name, data.message, data.dateTime]
+    );
+  } catch (err) {
+    console.error('❌ Failed to log message to Neon DB:', err);
+  }}
 }
 
 // Authentication

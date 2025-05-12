@@ -1,6 +1,6 @@
 const SECRET_KEY = "mySuperSecretKey123";
 
-const socket = io("wss://yap-sessions.onrender.com")
+const socket = io("wss://web-socket-communication.onrender.com")
 
 const totalClients = document.getElementById('clients-total')
 
@@ -126,20 +126,20 @@ function scrollToBottom() {
 }
 
 messageInput.addEventListener('focus', (e) => {
-  socket.emit('feedback', currentRoom, {
+  socket.broadcast('feedback', currentRoom, {
     feedback: `${username} is typing...`
   })
 })
 
 messageInput.addEventListener('keypress', (e) => {
   clearFeedback()
-  socket.emit('feedback', currentRoom, {
+  socket.broadcast('feedback', currentRoom, {
     feedback: `${username} is typing...`
   })
 })
 
 messageInput.addEventListener('blur', (e) => {
-  socket.emit('feedback', currentRoom, {
+  socket.broadcast('feedback', currentRoom, {
     feedback: ``
   })
 })
