@@ -248,30 +248,31 @@ uploadButton.addEventListener('click', () => {
 
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("publicKey", "public_yRsEtGCcMzpfjwOAC/yZFWJ7Kgg=");
   formData.append("fileName", file.name);
   formData.append("folder", "/uploads"); // optional
 
   fetch("https://upload.imagekit.io/api/v1/files/upload", {
     method: "POST",
+    headers: {
+      Authorization: "Basic " + btoa("public_yRsEtGCcMzpfjwOAC/yZFWJ7Kgg:")
+    },
     body: formData
   })
     .then(res => res.json())
     .then(data => {
-  console.log("ImageKit response:", data); // Helpful for debugging
+      console.log("ImageKit response:", data); // Helpful for debugging
 
-  if (!data || !data.url) {
-    throw new Error("Upload failed or missing URL.");
-  }
+      if (!data || !data.url) {
+        throw new Error("Upload failed or missing URL.");
+      }
 
-  const fileMessage = `<a href="${data.url}" target="_blank">${file.name}</a>`;
-  messageInput.value = fileMessage;
-  document.getElementById('message-form').dispatchEvent(new Event('submit'));
-  })
-
-  .catch(err => {
+      const fileMessage = `<a href="${data.url}" target="_blank">${file.name}</a>`;
+      messageInput.value = fileMessage;
+      document.getElementById('message-form').dispatchEvent(new Event('submit'));
+    })
+    .catch(err => {
       console.error("Upload failed:", err);
       alert("File upload failed.");
-  });
+    });
 });
 
