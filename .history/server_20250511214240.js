@@ -316,7 +316,6 @@ app.post('/register', checkNotAuthenticated, async (req, res) => {
 // Logout
 app.delete('/logout', (req, res, next) => {
   const socketID = req.body.socketID;
-  
   req.logout((err) => {
     if (err) {
       return next(err); // Handle errors properly

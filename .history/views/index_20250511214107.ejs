@@ -70,7 +70,8 @@
   <header>
     <h2 class="app-title">Yap Sessions</h2>
     <form action="/logout?_method=DELETE" method="POST" id="logout-form" class="logout-form">
-      <button type="submit">Log Out</button>
+      <p type="hidden" id="socket-id" name="socket-id"></p>
+      <button type="submit">Log Out: <p id="socket-id" name="socket-id"></p></button>
     </form>
     <div id="room-container">
       <ul id="room-buttons">

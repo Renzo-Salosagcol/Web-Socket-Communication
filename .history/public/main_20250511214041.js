@@ -10,7 +10,7 @@ const username = document.getElementById('name-input').value;
 const nameInput = username
 const messageForm = document.getElementById('message-form')
 const messageInput = document.getElementById('message-input')
-const logoutForm = document.getElementById('logout-form')
+const socketDisplay = document.getElementById('socket-id')
 
 const roomButtons = document.getElementById('room-buttons')
 let rooms = []
@@ -19,6 +19,12 @@ const emojiButton = document.getElementById('emoji-button');
 const emojiContainer = document.getElementById('emoji-container');
 const picker = document.createElement('emoji-picker');
 emojiContainer.appendChild(picker);
+
+socket.on('add-socket-id', (name, id) => {
+  if (name === username) {
+    socketDisplay.value = id
+  }
+})
 
 
 // Add the click listener ONCE
@@ -41,11 +47,6 @@ socket.on("total-clients", (data) => {
 
 const rateLimitedMessage = rateLimit(sendMessage, 10000, 3)
 let callCount = 0
-
-logoutForm.addEventListener('submit', (e) => {
-  e.preventDefault()
-  socket.emit('disconnect', username)
-})
 
 messageForm.addEventListener('submit', (e) => {
   e.preventDefault()

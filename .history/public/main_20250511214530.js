@@ -45,6 +45,7 @@ let callCount = 0
 logoutForm.addEventListener('submit', (e) => {
   e.preventDefault()
   socket.emit('disconnect', username)
+  window.location.href = '/logout'
 })
 
 messageForm.addEventListener('submit', (e) => {
