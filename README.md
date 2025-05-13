@@ -9,7 +9,7 @@
 <li>Ivan Perez</li>
 
 ## Access The Project Here:
-https://yap-sessions.onrender.com/
+https://web-socket-communication.onrender.com/
 
 ## Description
 
